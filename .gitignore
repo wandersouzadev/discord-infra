@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+
+# Bun
+.bun/
+
+# Environment secrets
+.env
+.env.local
+.env.*.local
+
+# Logs and system generated
+*.log
+.system_generated/
+scratch/
+
+# Build artifacts
+dist/
+build/
+coverage/
+
+# OS and Editor
+.DS_Store
+.idea/
+.vscode/

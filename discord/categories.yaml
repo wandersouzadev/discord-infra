@@ -1,0 +1,12 @@
+categories:
+  - name: COMMUNITY
+    position: 0
+
+  - name: SUPPORT
+    position: 1
+
+  - name: DEVELOPMENT
+    position: 2
+
+  - name: STAFF
+    position: 3

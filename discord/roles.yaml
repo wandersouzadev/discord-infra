@@ -1,0 +1,49 @@
+roles:
+  - name: GM
+    color: "#9B59B6" # Amethyst Purple
+    hoist: true
+    mentionable: true
+    permissions:
+      - view_channel
+      - send_messages
+      - manage_channels
+      - manage_roles
+      - manage_messages
+      - kick_members
+      - ban_members
+      - read_message_history
+      - attach_files
+      - embed_links
+
+  - name: MOD
+    color: "#3498DB" # Blue
+    hoist: true
+    mentionable: true
+    permissions:
+      - view_channel
+      - send_messages
+      - manage_messages
+      - kick_members
+      - read_message_history
+      - attach_files
+      - embed_links
+
+  - name: DEVELOPER
+    color: "#E67E22" # Orange
+    hoist: true
+    mentionable: true
+    permissions:
+      - view_channel
+      - send_messages
+      - read_message_history
+      - attach_files
+      - embed_links
+
+  - name: SUPPORT
+    color: "#2ECC71" # Green
+    hoist: false
+    mentionable: false
+    permissions:
+      - view_channel
+      - send_messages
+      - read_message_history

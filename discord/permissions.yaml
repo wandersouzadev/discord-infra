@@ -1,0 +1,82 @@
+permissions:
+  # Category: COMMUNITY
+  COMMUNITY:
+    "@everyone":
+      view_channel: true
+      send_messages: true
+      read_message_history: true
+
+  # Channel: welcome (read-only for normal users)
+  welcome:
+    "@everyone":
+      view_channel: true
+      send_messages: false
+      add_reactions: true
+
+  # Channel: announcements (read-only for regular users, staff can post)
+  announcements:
+    "@everyone":
+      view_channel: true
+      send_messages: false
+    MOD:
+      send_messages: true
+    GM:
+      send_messages: true
+
+  # Category: SUPPORT
+  SUPPORT:
+    "@everyone":
+      view_channel: true
+      send_messages: true
+      attach_files: true
+    SUPPORT:
+      view_channel: true
+      manage_messages: true
+      send_messages: true
+    MOD:
+      view_channel: true
+      manage_messages: true
+      send_messages: true
+    GM:
+      view_channel: true
+      manage_messages: true
+      manage_channels: true
+
+  # Category: DEVELOPMENT (closed to public)
+  DEVELOPMENT:
+    "@everyone":
+      view_channel: false
+    DEVELOPER:
+      view_channel: true
+      send_messages: true
+      attach_files: true
+      read_message_history: true
+    GM:
+      view_channel: true
+      send_messages: true
+      manage_messages: true
+
+  # Category: STAFF (private to staff members)
+  STAFF:
+    "@everyone":
+      view_channel: false
+    MOD:
+      view_channel: true
+      send_messages: true
+      manage_messages: true
+      read_message_history: true
+    GM:
+      view_channel: true
+      send_messages: true
+      manage_channels: true
+      manage_messages: true
+      read_message_history: true
+
+  # Channel: gm-chat (confidential Game Master only channel)
+  gm-chat:
+    MOD:
+      view_channel: false
+    GM:
+      view_channel: true
+      send_messages: true
+      manage_messages: true

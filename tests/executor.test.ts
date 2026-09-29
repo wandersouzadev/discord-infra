@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import type { DiscordRestClient } from "../src/discord/client.js";
 import { executePlan } from "../src/executor/executor.js";
-import type { Operation, Plan } from "../src/planner/types.js";
+import type { Plan } from "../src/planner/types.js";
 import { SafetyError } from "../src/utils/errors.js";
 
 describe("Executor Engine", () => {

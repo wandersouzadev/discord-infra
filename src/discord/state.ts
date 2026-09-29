@@ -1,11 +1,6 @@
 import type { DiscordRestClient } from "./client.js";
 import { buildBotGuildContext, type BotGuildContext } from "./hierarchy.js";
-import {
-  ChannelType,
-  type DiscordChannel,
-  type DiscordGuild,
-  type DiscordRole,
-} from "./types.js";
+import { ChannelType, type DiscordChannel, type DiscordGuild, type DiscordRole } from "./types.js";
 
 export interface DiscordServerState {
   guild: DiscordGuild;

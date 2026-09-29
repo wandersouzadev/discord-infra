@@ -177,10 +177,7 @@ export function verifyState(
       ? current.categoriesById.get(existing.parent_id)?.name
       : undefined;
 
-    if (
-      chan.category &&
-      actualParent?.toLowerCase() !== chan.category.toLowerCase()
-    ) {
+    if (chan.category && actualParent?.toLowerCase() !== chan.category.toLowerCase()) {
       channelsInSync = false;
       drift.push({
         resourceType: "channel",
@@ -213,10 +210,7 @@ export function verifyState(
       });
     }
 
-    if (
-      chan.slowmode !== undefined &&
-      existing.rate_limit_per_user !== chan.slowmode
-    ) {
+    if (chan.slowmode !== undefined && existing.rate_limit_per_user !== chan.slowmode) {
       channelsInSync = false;
       drift.push({
         resourceType: "channel",

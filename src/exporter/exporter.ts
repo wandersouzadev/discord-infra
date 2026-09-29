@@ -9,10 +9,7 @@ import type {
   PermissionsConfig,
   RoleConfig,
 } from "../config/types.js";
-import {
-  bitfieldToPermissions,
-  overwritesToPermissionMap,
-} from "../discord/permissions.js";
+import { bitfieldToPermissions, overwritesToPermissionMap } from "../discord/permissions.js";
 import type { DiscordServerState } from "../discord/state.js";
 import { ChannelType } from "../discord/types.js";
 

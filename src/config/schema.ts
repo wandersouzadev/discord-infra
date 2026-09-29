@@ -25,7 +25,10 @@ export function numberToHexColor(color?: number): string | undefined {
 }
 
 export const RoleSchema = z.object({
-  name: z.string().min(1, "Role name cannot be empty").max(100, "Role name cannot exceed 100 characters"),
+  name: z
+    .string()
+    .min(1, "Role name cannot be empty")
+    .max(100, "Role name cannot exceed 100 characters"),
   discord_id: z.string().optional(),
   color: z
     .union([z.string(), z.number()])
@@ -54,13 +57,17 @@ export const RoleSchema = z.object({
         return perms.every((p) => isValidPermission(p));
       },
       {
-        message: "One or more role permissions are invalid. Ensure standard Discord permission names are used.",
+        message:
+          "One or more role permissions are invalid. Ensure standard Discord permission names are used.",
       },
     ),
 });
 
 export const CategorySchema = z.object({
-  name: z.string().min(1, "Category name cannot be empty").max(100, "Category name cannot exceed 100 characters"),
+  name: z
+    .string()
+    .min(1, "Category name cannot be empty")
+    .max(100, "Category name cannot exceed 100 characters"),
   discord_id: z.string().optional(),
   position: z.number().int().min(0).optional(),
 });
@@ -68,13 +75,21 @@ export const CategorySchema = z.object({
 export const ChannelTypeSchema = z.enum(["text", "voice", "announcement", "forum"]);
 
 export const ChannelSchema = z.object({
-  name: z.string().min(1, "Channel name cannot be empty").max(100, "Channel name cannot exceed 100 characters"),
+  name: z
+    .string()
+    .min(1, "Channel name cannot be empty")
+    .max(100, "Channel name cannot exceed 100 characters"),
   discord_id: z.string().optional(),
   category: z.string().optional(),
   type: ChannelTypeSchema.default("text"),
   topic: z.string().max(1024, "Topic cannot exceed 1024 characters").optional(),
   position: z.number().int().min(0).optional(),
-  slowmode: z.number().int().min(0).max(21600, "Slowmode cannot exceed 21600 seconds (6 hours)").optional(),
+  slowmode: z
+    .number()
+    .int()
+    .min(0)
+    .max(21600, "Slowmode cannot exceed 21600 seconds (6 hours)")
+    .optional(),
   permissions: z
     .record(
       z.string(), // Role name
@@ -124,7 +139,9 @@ export function validateReferentialIntegrity(config: DiscordConfig): void {
   for (const cat of config.categories ?? []) {
     const lower = cat.name.toLowerCase();
     if (categoryNames.has(lower)) {
-      errors.push(`Duplicate category name detected: "${cat.name}". Categories must have unique names.`);
+      errors.push(
+        `Duplicate category name detected: "${cat.name}". Categories must have unique names.`,
+      );
     }
     categoryNames.add(lower);
   }
@@ -160,9 +177,7 @@ export function validateReferentialIntegrity(config: DiscordConfig): void {
         }
         for (const permKey of Object.keys(perms)) {
           if (!isValidPermission(permKey)) {
-            errors.push(
-              `Channel "${chan.name}" references unknown permission flag: "${permKey}".`,
-            );
+            errors.push(`Channel "${chan.name}" references unknown permission flag: "${permKey}".`);
           }
         }
       }

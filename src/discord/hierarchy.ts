@@ -130,10 +130,7 @@ export function checkRoleManageability(
   }
 
   // If reordering, the new target position must also be strictly lower than bot's highest role position
-  if (
-    options?.newPosition !== undefined &&
-    options.newPosition >= context.highestRolePosition
-  ) {
+  if (options?.newPosition !== undefined && options.newPosition >= context.highestRolePosition) {
     const botRoleName = context.highestRole?.name ?? "Unknown";
     return {
       canManage: false,

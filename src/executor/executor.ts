@@ -272,7 +272,9 @@ export function formatExecutionResult(result: ExecutionResult): string {
 
     if (result.unexecuted.length > 0) {
       lines.push(
-        format.dim(`\nNo further operations were executed (${result.unexecuted.length} remaining).`),
+        format.dim(
+          `\nNo further operations were executed (${result.unexecuted.length} remaining).`,
+        ),
       );
     }
   }

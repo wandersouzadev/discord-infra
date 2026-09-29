@@ -47,9 +47,7 @@ export function validate(options: { configPath?: string } = {}): {
 /**
  * Fetch full Discord server state.
  */
-export async function getState(
-  options: ProgrammaticOptions = {},
-): Promise<DiscordServerState> {
+export async function getState(options: ProgrammaticOptions = {}): Promise<DiscordServerState> {
   const guildId = options.guildId ?? process.env.DISCORD_GUILD_ID;
   if (!guildId) {
     throw new Error("DISCORD_GUILD_ID is required.");
@@ -73,9 +71,7 @@ export async function plan(
 /**
  * Apply the declarative infrastructure changes to Discord.
  */
-export async function apply(
-  options: ProgrammaticOptions & ExecutorOptions = {},
-): Promise<{
+export async function apply(options: ProgrammaticOptions & ExecutorOptions = {}): Promise<{
   plan: Plan;
   execution: ExecutionResult;
   verification?: VerificationResult;

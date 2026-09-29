@@ -35,10 +35,7 @@ export function resetOpCounter(): void {
   opCounter = 0;
 }
 
-export function computeDiff(
-  desired: DiscordConfig,
-  current: DiscordServerState,
-): DiffResult {
+export function computeDiff(desired: DiscordConfig, current: DiscordServerState): DiffResult {
   const operations: Operation[] = [];
   const hierarchyWarnings: string[] = [];
 
@@ -256,10 +253,7 @@ export function computeDiff(
         payload.name = desiredCat.name;
       }
 
-      if (
-        desiredCat.position !== undefined &&
-        existingCat.position !== desiredCat.position
-      ) {
+      if (desiredCat.position !== undefined && existingCat.position !== desiredCat.position) {
         changes.push({
           property: "position",
           oldValue: existingCat.position,
@@ -314,9 +308,7 @@ export function computeDiff(
       // Find candidate channels matching the name
       const candidates = current.channelsByName.get(lowerName) ?? [];
       for (const cand of candidates) {
-        const candParent = cand.parent_id
-          ? current.categoriesById.get(cand.parent_id)
-          : undefined;
+        const candParent = cand.parent_id ? current.categoriesById.get(cand.parent_id) : undefined;
         const candCatName = candParent?.name?.toLowerCase();
         if (parentCategoryName) {
           if (candCatName === parentCategoryName.toLowerCase()) {
@@ -408,7 +400,10 @@ export function computeDiff(
         : undefined;
       const currentCatName = currentParent?.name;
 
-      if (parentCategoryName && currentCatName?.toLowerCase() !== parentCategoryName.toLowerCase()) {
+      if (
+        parentCategoryName &&
+        currentCatName?.toLowerCase() !== parentCategoryName.toLowerCase()
+      ) {
         changes.push({
           property: "category",
           oldValue: currentCatName ?? "None",
@@ -449,10 +444,7 @@ export function computeDiff(
       }
 
       // Check position
-      if (
-        desiredChan.position !== undefined &&
-        existingChan.position !== desiredChan.position
-      ) {
+      if (desiredChan.position !== undefined && existingChan.position !== desiredChan.position) {
         changes.push({
           property: "position",
           oldValue: existingChan.position,
@@ -540,7 +532,9 @@ export function computeDiff(
 
     const target = targetCat ?? targetChan;
     const targetType = targetCat ? "category" : "channel";
-    const targetDisplayName = targetCat ? targetCat.name ?? targetNameLower : `#${targetChan?.name ?? targetNameLower}`;
+    const targetDisplayName = targetCat
+      ? (targetCat.name ?? targetNameLower)
+      : `#${targetChan?.name ?? targetNameLower}`;
 
     // Dependencies if the target is newly created
     const targetDependsOn: string[] = [];

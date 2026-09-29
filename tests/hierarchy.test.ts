@@ -1,8 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  buildBotGuildContext,
-  checkRoleManageability,
-} from "../src/discord/hierarchy.js";
+import { buildBotGuildContext, checkRoleManageability } from "../src/discord/hierarchy.js";
 import { PERMISSION_FLAGS } from "../src/discord/permissions.js";
 import type {
   DiscordGuild,
@@ -31,9 +28,7 @@ describe("Discord Role Hierarchy", () => {
     color: 0,
     hoist: false,
     position: 10,
-    permissions: (
-      PERMISSION_FLAGS.manage_roles! | PERMISSION_FLAGS.manage_channels!
-    ).toString(),
+    permissions: (PERMISSION_FLAGS.manage_roles! | PERMISSION_FLAGS.manage_channels!).toString(),
     managed: true,
     mentionable: false,
   };

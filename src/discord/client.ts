@@ -29,7 +29,10 @@ export class DiscordRestClient {
   constructor(options: DiscordClientOptions = {}) {
     const rawToken = options.token ?? process.env.DISCORD_BOT_TOKEN;
     if (!rawToken || !rawToken.trim()) {
-      throw new DiscordApiError("DISCORD_BOT_TOKEN environment variable or option is required.", 401);
+      throw new DiscordApiError(
+        "DISCORD_BOT_TOKEN environment variable or option is required.",
+        401,
+      );
     }
     this.token = rawToken.trim();
     registerSecretToken(this.token);
@@ -138,12 +141,7 @@ export class DiscordRestClient {
             errorData?.message ??
             `HTTP request failed with status ${response.status} ${response.statusText}`;
 
-          throw new DiscordApiError(
-            message,
-            response.status,
-            errorData?.code,
-            errorData?.errors,
-          );
+          throw new DiscordApiError(message, response.status, errorData?.code, errorData?.errors);
         }
 
         return (await response.json()) as T;
@@ -167,7 +165,10 @@ export class DiscordRestClient {
       }
     }
 
-    throw new DiscordApiError(`Max retries (${this.maxRetries}) exceeded for ${method} ${endpoint}`, 0);
+    throw new DiscordApiError(
+      `Max retries (${this.maxRetries}) exceeded for ${method} ${endpoint}`,
+      0,
+    );
   }
 
   // --- Current User ---

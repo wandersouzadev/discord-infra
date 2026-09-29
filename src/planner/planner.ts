@@ -8,10 +8,7 @@ import type { Operation, Plan } from "./types.js";
 /**
  * Generate a complete, side-effect free deployment plan.
  */
-export function generatePlan(
-  desired: DiscordConfig,
-  current: DiscordServerState,
-): Plan {
+export function generatePlan(desired: DiscordConfig, current: DiscordServerState): Plan {
   resetOpCounter();
 
   const diff = computeDiff(desired, current);
@@ -39,7 +36,9 @@ export function formatPlanOutput(plan: Plan): string {
   lines.push("");
 
   if (plan.operations.length === 0) {
-    lines.push(format.success("No changes required. Infrastructure is in sync with desired state."));
+    lines.push(
+      format.success("No changes required. Infrastructure is in sync with desired state."),
+    );
     return lines.join("\n");
   }
 

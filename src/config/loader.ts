@@ -61,7 +61,8 @@ function loadConfigFile(filePath: string, options: LoadConfigOptions): DiscordCo
 }
 
 function loadConfigDir(dirPath: string, options: LoadConfigOptions): DiscordConfig {
-  const rolesYaml = tryReadYaml(join(dirPath, "roles.yaml")) ?? tryReadYaml(join(dirPath, "roles.yml"));
+  const rolesYaml =
+    tryReadYaml(join(dirPath, "roles.yaml")) ?? tryReadYaml(join(dirPath, "roles.yml"));
   const categoriesYaml =
     tryReadYaml(join(dirPath, "categories.yaml")) ?? tryReadYaml(join(dirPath, "categories.yml"));
   const channelsYaml =
@@ -119,7 +120,9 @@ function validateAndNormalizeConfig(raw: unknown, options: LoadConfigOptions): D
     parsedConfig = DiscordConfigSchema.parse(raw);
   } catch (err) {
     if (err instanceof ZodError) {
-      const issues = err.issues.map((issue) => `[${issue.path.join(".") || "root"}]: ${issue.message}`);
+      const issues = err.issues.map(
+        (issue) => `[${issue.path.join(".") || "root"}]: ${issue.message}`,
+      );
       throw new ConfigValidationError(
         `Invalid configuration schema (${issues.length} issue(s)):\n  - ${issues.join("\n  - ")}`,
         err.issues,

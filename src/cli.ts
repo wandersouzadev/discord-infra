@@ -114,9 +114,7 @@ program
       }
     } catch (err) {
       if (options.json) {
-        console.error(
-          JSON.stringify({ error: (err as Error).message }, null, 2),
-        );
+        console.error(JSON.stringify({ error: (err as Error).message }, null, 2));
       } else {
         console.error(format.error(`Plan failed:`));
         console.error((err as Error).message);
@@ -232,9 +230,7 @@ program
       }
 
       if (options.json) {
-        console.error(
-          JSON.stringify({ error: (err as Error).message }, null, 2),
-        );
+        console.error(JSON.stringify({ error: (err as Error).message }, null, 2));
       } else {
         console.error(format.error(`\nApply failed:`));
         console.error((err as Error).message);
@@ -277,9 +273,7 @@ program
       }
     } catch (err) {
       if (options.json) {
-        console.error(
-          JSON.stringify({ error: (err as Error).message }, null, 2),
-        );
+        console.error(JSON.stringify({ error: (err as Error).message }, null, 2));
       } else {
         console.error(format.error(`Verify failed:`));
         console.error((err as Error).message);
@@ -346,9 +340,7 @@ program
       }
     } catch (err) {
       if (options.json) {
-        console.error(
-          JSON.stringify({ error: (err as Error).message }, null, 2),
-        );
+        console.error(JSON.stringify({ error: (err as Error).message }, null, 2));
       } else {
         console.error(format.error(`Export failed:`));
         console.error((err as Error).message);

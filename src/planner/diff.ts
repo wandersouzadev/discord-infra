@@ -207,6 +207,7 @@ export function computeDiff(desired: DiscordConfig, current: DiscordServerState)
   // ----------------------------------------------------
   const matchedCategoryIds = new Set<string>();
   const createdCategoryOpIds = new Map<string, string>(); // category name (lower) -> op id
+  const targetCategoryMap = new Map<string, DiscordChannel>(); // desired name (lower) -> existing category
 
   for (const desiredCat of desired.categories ?? []) {
     const lowerName = desiredCat.name.toLowerCase();
@@ -240,6 +241,7 @@ export function computeDiff(desired: DiscordConfig, current: DiscordServerState)
       });
     } else {
       matchedCategoryIds.add(existingCat.id);
+      targetCategoryMap.set(lowerName, existingCat);
 
       const changes: PropertyChange[] = [];
       const payload: Record<string, unknown> = {};
@@ -291,6 +293,7 @@ export function computeDiff(desired: DiscordConfig, current: DiscordServerState)
   // ----------------------------------------------------
   const matchedChannelIds = new Set<string>();
   const createdChannelOpIds = new Map<string, string>(); // "category:channel" -> op id
+  const targetChannelMap = new Map<string, DiscordChannel>(); // desired channel name (lower) -> existing channel
 
   for (const desiredChan of desired.channels ?? []) {
     const lowerName = desiredChan.name.toLowerCase();
@@ -333,7 +336,8 @@ export function computeDiff(desired: DiscordConfig, current: DiscordServerState)
 
     if (parentCategoryName) {
       const lowerParent = parentCategoryName.toLowerCase();
-      const existingParent = current.categoriesByName.get(lowerParent);
+      const existingParent =
+        targetCategoryMap.get(lowerParent) ?? current.categoriesByName.get(lowerParent);
       if (existingParent) {
         targetParentId = existingParent.id;
       } else {
@@ -381,6 +385,7 @@ export function computeDiff(desired: DiscordConfig, current: DiscordServerState)
       });
     } else {
       matchedChannelIds.add(existingChan.id);
+      targetChannelMap.set(lowerName, existingChan);
 
       const changes: PropertyChange[] = [];
       const payload: Record<string, unknown> = {};
@@ -400,23 +405,18 @@ export function computeDiff(desired: DiscordConfig, current: DiscordServerState)
         : undefined;
       const currentCatName = currentParent?.name;
 
-      if (
-        parentCategoryName &&
-        currentCatName?.toLowerCase() !== parentCategoryName.toLowerCase()
-      ) {
+      const currentParentId = existingChan.parent_id ?? null;
+      const isParentChanged = parentCategoryName
+        ? targetParentId !== currentParentId
+        : currentParentId !== null;
+
+      if (isParentChanged) {
         changes.push({
           property: "category",
           oldValue: currentCatName ?? "None",
-          newValue: parentCategoryName,
+          newValue: parentCategoryName ?? "None",
         });
         payload.parent_id = targetParentId;
-      } else if (!parentCategoryName && existingChan.parent_id) {
-        changes.push({
-          property: "category",
-          oldValue: currentCatName ?? "None",
-          newValue: "None",
-        });
-        payload.parent_id = null;
       }
 
       // Check topic
@@ -525,10 +525,11 @@ export function computeDiff(desired: DiscordConfig, current: DiscordServerState)
 
   // Compare consolidated permissions against Discord state
   for (const [targetNameLower, rolePermMap] of consolidatedPermissions) {
-    // Find target channel or category in Discord
-    const targetCat = current.categoriesByName.get(targetNameLower);
-    const targetChanList = current.channelsByName.get(targetNameLower);
-    const targetChan = targetChanList?.[0];
+    // Find target channel or category in Discord (check matched resources first for renamed targets)
+    const targetCat =
+      targetCategoryMap.get(targetNameLower) ?? current.categoriesByName.get(targetNameLower);
+    const targetChan =
+      targetChannelMap.get(targetNameLower) ?? current.channelsByName.get(targetNameLower)?.[0];
 
     const target = targetCat ?? targetChan;
     const targetType = targetCat ? "category" : "channel";

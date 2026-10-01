@@ -184,4 +184,42 @@ describe("Planner and Diff Engine", () => {
     expect(parsed.summary.create).toBe(1);
     expect(parsed.operations[0].action).toBe("create_role");
   });
+
+  it("renames channels and categories when discord_id is specified instead of duplicating", () => {
+    const desiredConfig: DiscordConfig = {
+      roles: [{ name: "MOD", discord_id: "role_mod" }],
+      categories: [{ name: "▬▬▬ STAFF ▬▬▬", discord_id: "cat_staff", position: 0 }],
+      channels: [
+        {
+          name: "🔒・staff-chat",
+          discord_id: "chan_staff_chat",
+          category: "▬▬▬ STAFF ▬▬▬",
+          topic: "Old Topic",
+        },
+      ],
+      permissions: {
+        "▬▬▬ STAFF ▬▬▬": {
+          "@everyone": { view_channel: false },
+          MOD: { view_channel: true, send_messages: true },
+        },
+      },
+    };
+
+    const plan = generatePlan(desiredConfig, mockServerState);
+
+    // Should NOT create new category or channel, should UPDATE instead!
+    expect(plan.summary.create).toBe(0);
+
+    const catUpdate = plan.operations.find(
+      (o) => o.type === "UPDATE_CATEGORY" && o.resourceId === "cat_staff",
+    );
+    expect(catUpdate).toBeDefined();
+    expect((catUpdate?.payload as Record<string, unknown>).name).toBe("▬▬▬ STAFF ▬▬▬");
+
+    const chanUpdate = plan.operations.find(
+      (o) => o.type === "UPDATE_CHANNEL" && o.resourceId === "chan_staff_chat",
+    );
+    expect(chanUpdate).toBeDefined();
+    expect((chanUpdate?.payload as Record<string, unknown>).name).toBe("🔒・staff-chat");
+  });
 });

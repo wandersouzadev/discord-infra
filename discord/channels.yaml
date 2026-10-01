@@ -1,85 +1,85 @@
 channels:
   # COMMUNITY category
-  - name: welcome
-    category: COMMUNITY
+  - name: "👋・welcome"
+    category: "▬▬▬ COMMUNITY ▬▬▬"
     type: text
     topic: "Welcome to the realm! Read rules and start your journey here."
     position: 0
 
-  - name: announcements
-    category: COMMUNITY
+  - name: "📢・announcements"
+    category: "▬▬▬ COMMUNITY ▬▬▬"
     type: text
     topic: "Official realm announcements, game updates, and community news."
     position: 1
 
-  - name: general
-    category: COMMUNITY
+  - name: "💬・general"
+    category: "▬▬▬ COMMUNITY ▬▬▬"
     type: text
     topic: "General discussion about the game, lore, and gameplay."
     position: 2
 
-  - name: off-topic
-    category: COMMUNITY
+  - name: "☕・off-topic"
+    category: "▬▬▬ COMMUNITY ▬▬▬"
     type: text
     topic: "Non-game related casual chat."
     position: 3
 
   # SUPPORT category
-  - name: support
-    category: SUPPORT
+  - name: "🎫・support"
+    category: "▬▬▬ SUPPORT ▬▬▬"
     type: text
     topic: "General game help and player support assistance."
     position: 0
     slowmode: 5
 
-  - name: bug-reports
-    category: SUPPORT
+  - name: "🐛・bug-reports"
+    category: "▬▬▬ SUPPORT ▬▬▬"
     type: text
     topic: "Report game glitches, exploits, and technical issues."
     position: 1
     slowmode: 10
 
-  - name: player-reports
-    category: SUPPORT
+  - name: "🚨・player-reports"
+    category: "▬▬▬ SUPPORT ▬▬▬"
     type: text
     topic: "Report player misconduct, botting, or terms of service violations."
     position: 2
     slowmode: 15
 
   # DEVELOPMENT category
-  - name: dev-chat
-    category: DEVELOPMENT
+  - name: "💻・dev-chat"
+    category: "▬▬▬ DEVELOPMENT ▬▬▬"
     type: text
     topic: "Engineers and designers coordination and brainstorm."
     position: 0
 
-  - name: patch-notes
-    category: DEVELOPMENT
+  - name: "📋・patch-notes"
+    category: "▬▬▬ DEVELOPMENT ▬▬▬"
     type: text
     topic: "Upcoming build patch notes and balance adjustments."
     position: 1
 
-  - name: testing
-    category: DEVELOPMENT
+  - name: "🧪・testing"
+    category: "▬▬▬ DEVELOPMENT ▬▬▬"
     type: text
     topic: "Quality assurance reports and public test realm discussion."
     position: 2
 
   # STAFF category
-  - name: staff-chat
-    category: STAFF
+  - name: "🔒・staff-chat"
+    category: "▬▬▬ STAFF ▬▬▬"
     type: text
     topic: "Staff lounge and administrative discussions."
     position: 0
 
-  - name: moderation
-    category: STAFF
+  - name: "🛡️・moderation"
+    category: "▬▬▬ STAFF ▬▬▬"
     type: text
     topic: "Moderation logs, incident tracking, and player disciplinary reviews."
     position: 1
 
-  - name: gm-chat
-    category: STAFF
+  - name: "👑・gm-chat"
+    category: "▬▬▬ STAFF ▬▬▬"
     type: text
     topic: "High-level Game Master command center and policy discussion."
     position: 2

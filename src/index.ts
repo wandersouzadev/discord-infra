@@ -23,6 +23,7 @@ export * from "./executor/types.js";
 export * from "./executor/executor.js";
 export * from "./verifier/verifier.js";
 export * from "./exporter/exporter.js";
+export * from "./wiper/wiper.js";
 export * from "./utils/errors.js";
 export * from "./utils/logger.js";
 export * from "./utils/format.js";

@@ -18,9 +18,9 @@ permissions:
     "@everyone":
       view_channel: true
       send_messages: false
-    MOD:
+    Paladin:
       send_messages: true
-    GM:
+    Dungeon Master:
       send_messages: true
 
   # Category: SUPPORT
@@ -29,15 +29,15 @@ permissions:
       view_channel: true
       send_messages: true
       attach_files: true
-    SUPPORT:
+    Cleric:
       view_channel: true
       manage_messages: true
       send_messages: true
-    MOD:
+    Paladin:
       view_channel: true
       manage_messages: true
       send_messages: true
-    GM:
+    Dungeon Master:
       view_channel: true
       manage_messages: true
       manage_channels: true
@@ -46,12 +46,12 @@ permissions:
   "▬▬▬ DEVELOPMENT ▬▬▬":
     "@everyone":
       view_channel: false
-    DEVELOPER:
+    Artificer:
       view_channel: true
       send_messages: true
       attach_files: true
       read_message_history: true
-    GM:
+    Dungeon Master:
       view_channel: true
       send_messages: true
       manage_messages: true
@@ -60,12 +60,12 @@ permissions:
   "▬▬▬ STAFF ▬▬▬":
     "@everyone":
       view_channel: false
-    MOD:
+    Paladin:
       view_channel: true
       send_messages: true
       manage_messages: true
       read_message_history: true
-    GM:
+    Dungeon Master:
       view_channel: true
       send_messages: true
       manage_channels: true
@@ -74,9 +74,9 @@ permissions:
 
   # Channel: gm-chat (confidential Game Master only channel)
   "👑・gm-chat":
-    MOD:
+    Paladin:
       view_channel: false
-    GM:
+    Dungeon Master:
       view_channel: true
       send_messages: true
       manage_messages: true

@@ -16,6 +16,8 @@
     "export": "bun run src/cli.ts export",
     "verify": "bun run src/cli.ts verify",
     "wipe": "bun run src/cli.ts wipe",
+    "wipe:all": "bun run src/cli.ts wipe --all",
+    "wipe:roles": "bun run src/cli.ts wipe --roles-only",
     "clear": "bun run src/cli.ts clear",
     "test": "vitest run",
     "test:watch": "vitest",

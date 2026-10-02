@@ -309,18 +309,24 @@ bun run export --output discord-export --include-ids
 bun run export --output discord-export --single-file
 ```
 
-### 6. Wipe / Clear Channels
+### 6. Wipe / Clear Channels and Roles
 
-Safely purge channels and categories from Discord or configuration, protected by an explicit red warning banner and confirmation:
+Safely purge channels, categories, and roles from Discord or configuration, protected by an explicit red warning banner and confirmation:
 
 ```bash
-# Wipe only channels and categories defined in the local configuration:
+# Wipe channels, categories, and roles defined in the local configuration:
 bun run wipe
 
-# Or wipe ALL channels and categories across the entire server:
+# Or wipe ALL channels, categories, and roles across the entire server:
 bun run wipe --all
 
-# Or only wipe channels, leaving categories intact:
+# Or only wipe roles (leaving channels and categories intact):
+bun run wipe --roles-only
+
+# Or wipe ALL roles across the entire server:
+bun run wipe --all --roles-only
+
+# Or only wipe channels, leaving categories and roles intact:
 bun run wipe --channels-only
 
 # Preview targets first with dry-run mode:

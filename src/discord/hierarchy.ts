@@ -84,7 +84,28 @@ export function checkRoleManageability(
   targetRole: DiscordRole,
   options?: { isDeleting?: boolean; newPosition?: number },
 ): HierarchyCheckResult {
-  // Guild owner can manage everything
+  // Check @everyone role: cannot be deleted by anyone, even guild owner
+  if (targetRole.id === context.guild.id || targetRole.name === "@everyone") {
+    if (options?.isDeleting) {
+      return {
+        canManage: false,
+        reason: "Cannot delete the default '@everyone' role in Discord.",
+      };
+    }
+    if (context.isOwner) {
+      return { canManage: true };
+    }
+  }
+
+  // Managed integration roles (e.g. Nitro Booster, Bot integration roles) cannot be modified or deleted directly
+  if (targetRole.managed) {
+    return {
+      canManage: false,
+      reason: `Role '${targetRole.name}' (${targetRole.id}) is automatically managed by a Discord integration and cannot be modified.`,
+    };
+  }
+
+  // Guild owner can manage everything else
   if (context.isOwner) {
     return { canManage: true };
   }
@@ -97,35 +118,38 @@ export function checkRoleManageability(
     };
   }
 
-  // Check @everyone role: cannot be deleted
-  if (targetRole.id === context.guild.id) {
-    if (options?.isDeleting) {
-      return {
-        canManage: false,
-        reason: "Cannot delete the default '@everyone' role in Discord.",
-      };
-    }
-    // Permissions of @everyone can be modified if bot has MANAGE_ROLES
+  // Permissions of @everyone can be modified if bot has MANAGE_ROLES
+  if (targetRole.id === context.guild.id || targetRole.name === "@everyone") {
     return { canManage: true };
   }
 
-  // Managed integration roles (e.g. Nitro Booster, Bot integration roles) cannot be modified or deleted directly
-  if (targetRole.managed) {
+  // Cannot delete roles assigned to the bot itself
+  const isAssignedToBot =
+    context.member.roles.includes(targetRole.id) || context.highestRole?.id === targetRole.id;
+  if (isAssignedToBot && options?.isDeleting) {
     return {
       canManage: false,
-      reason: `Role '${targetRole.name}' (${targetRole.id}) is automatically managed by a Discord integration and cannot be modified.`,
+      reason: `Cannot delete role '${targetRole.name}' (${targetRole.id}) because it is assigned to the bot.`,
     };
   }
 
-  // Role hierarchy check: Target role position must be strictly LESS than bot's highest role position
-  if (targetRole.position >= context.highestRolePosition) {
+  // Role hierarchy check: Target role position must not be strictly greater than bot's highest role position
+  if (targetRole.position > context.highestRolePosition) {
     const botRoleName = context.highestRole?.name ?? "Unknown";
     return {
       canManage: false,
       reason:
         `Role hierarchy restriction: Cannot manage role '${targetRole.name}' (position ${targetRole.position}). ` +
         `The bot's highest role is '${botRoleName}' (position ${context.highestRolePosition}). ` +
-        `In Discord, bots can only manage roles positioned strictly lower than their highest role.`,
+        `In Discord, bots can only manage roles positioned lower than their highest role.`,
+    };
+  }
+
+  // If role is at the same position and is assigned to the bot, it cannot manage its own role
+  if (targetRole.position === context.highestRolePosition && isAssignedToBot) {
+    return {
+      canManage: false,
+      reason: `Role hierarchy restriction: Cannot manage bot's own role '${targetRole.name}' (position ${targetRole.position}).`,
     };
   }
 

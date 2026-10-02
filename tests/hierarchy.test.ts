@@ -112,4 +112,26 @@ describe("Discord Role Hierarchy", () => {
     const result = checkRoleManageability(context, higherRole);
     expect(result.canManage).toBe(true);
   });
+
+  it("allows bot to manage unassigned roles at equal position (e.g. newly created roles at position 1)", () => {
+    const equalUnassignedRole: DiscordRole = {
+      id: "role_created",
+      name: "DEVELOPER",
+      color: 0,
+      hoist: false,
+      position: 10, // Same position as botRole (10)
+      permissions: "0",
+      managed: false,
+      mentionable: false,
+    };
+    const context = buildBotGuildContext(botUser, guild, member, [...roles, equalUnassignedRole]);
+    const result = checkRoleManageability(context, equalUnassignedRole, { isDeleting: true });
+    expect(result.canManage).toBe(true);
+  });
+
+  it("blocks bot from deleting its own assigned role", () => {
+    const context = buildBotGuildContext(botUser, guild, member, roles);
+    const result = checkRoleManageability(context, botRole, { isDeleting: true });
+    expect(result.canManage).toBe(false);
+  });
 });

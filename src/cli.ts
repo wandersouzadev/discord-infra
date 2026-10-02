@@ -367,13 +367,14 @@ program
 program
   .command("wipe")
   .alias("clear")
-  .description("Safely purge channels and categories from Discord or configuration")
+  .description("Safely purge channels, categories, and roles from Discord or configuration")
   .option("-c, --config <path>", "Path to YAML configuration directory or file")
   .option("-g, --guild <id>", "Discord Guild ID")
-  .option("-a, --all", "Wipe ALL channels and categories in the Discord server (default)")
-  .option("--config-only", "Wipe only channels and categories declared in the configuration")
-  .option("--channels-only", "Only wipe channels, leaving categories intact")
-  .option("--dry-run", "Preview channels and categories to delete without making API calls")
+  .option("-a, --all", "Wipe ALL channels, categories, and roles in the Discord server")
+  .option("--config-only", "Wipe only resources declared in the configuration")
+  .option("--channels-only", "Only wipe channels, leaving categories and roles intact")
+  .option("--roles-only", "Only wipe roles, leaving channels and categories intact")
+  .option("--dry-run", "Preview resources to delete without making API calls")
   .option("-y, --yes", "Automatically approve wipe (use with extreme caution)")
   .option("--json", "Output results in JSON format")
   .option("-v, --verbose", "Enable verbose debug logs")
@@ -387,14 +388,19 @@ program
       const client = new DiscordRestClient();
       const state = await fetchDiscordState(client, guildId);
 
-      // Try loading config if config-only or custom config is requested
+      // Load config if --all is not specified, or if config is explicitly provided
       let config: DiscordConfig | undefined;
-      if (options.configOnly || options.config) {
+      if (!options.all || options.config || options.configOnly) {
         try {
           config = loadConfig({ configPath: options.config });
         } catch (err) {
-          if (options.configOnly) {
-            throw err;
+          if (options.all) {
+            // Config is optional when --all is explicitly passed
+          } else {
+            throw new DiscordInfraError(
+              `Configuration required for wipe: ${(err as Error).message}\n` +
+                `Specify a valid config with --config <path> or use '--all' to wipe all server resources.`,
+            );
           }
         }
       }
@@ -403,21 +409,27 @@ program
         all: options.all,
         configOnly: options.configOnly,
         channelsOnly: options.channelsOnly,
+        rolesOnly: options.rolesOnly,
       });
 
       if (!options.json) {
         console.log(formatWipeTargets(targets, state.guild.name));
       }
 
-      if (targets.channels.length === 0 && targets.categories.length === 0) {
+      if (
+        targets.channels.length === 0 &&
+        targets.categories.length === 0 &&
+        (targets.roles?.length ?? 0) === 0
+      ) {
         if (options.json) {
           console.log(
             JSON.stringify(
               {
                 success: true,
-                message: "No channels or categories to wipe.",
+                message: "No channels, categories, or roles to wipe.",
                 deletedChannelsCount: 0,
                 deletedCategoriesCount: 0,
+                deletedRolesCount: 0,
               },
               null,
               2,
@@ -437,6 +449,7 @@ program
 
       // Execute deletion
       const result = await executeWipe(targets, client, {
+        guildId,
         dryRun: options.dryRun,
         onProgress: (msg) => {
           if (!options.json) {
@@ -454,7 +467,7 @@ program
         } else {
           console.log(
             format.success(
-              `✓ Successfully wiped ${result.deletedChannels.length} channel(s) and ${result.deletedCategories.length} category(ies).`,
+              `✓ Successfully wiped ${result.deletedChannels.length} channel(s), ${result.deletedCategories.length} category(ies), and ${result.deletedRoles.length} role(s).`,
             ),
           );
           if (result.failed.length > 0) {

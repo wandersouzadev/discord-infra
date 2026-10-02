@@ -103,6 +103,14 @@ describe("Exporter Engine", () => {
     expect(config.permissions?.COMMUNITY?.MOD?.view_channel).toBe(true);
   });
 
+  it("includes discord_id when includeIds option is true", () => {
+    const config = exportStateToConfig(mockServerState, { includeIds: true });
+
+    expect(config.roles?.[0]?.discord_id).toBe("role_mod");
+    expect(config.categories?.[0]?.discord_id).toBe("cat_comm");
+    expect(config.channels?.[0]?.discord_id).toBe("chan_gen");
+  });
+
   it("writes configuration to YAML files on disk", () => {
     const config = exportStateToConfig(mockServerState);
     const testExportDir = join(process.cwd(), "scratch", "test-export");

@@ -303,8 +303,34 @@ Export an existing Discord server's roles, categories, channels, and permissions
 
 ```bash
 bun run export --output discord-export
+# Or include Discord Snowflake IDs:
+bun run export --output discord-export --include-ids
 # Or into a single file:
 bun run export --output discord-export --single-file
+```
+
+### 6. Wipe / Clear Channels and Roles
+
+Safely purge channels, categories, and roles from Discord or configuration, protected by an explicit red warning banner and confirmation:
+
+```bash
+# Wipe channels, categories, and roles defined in the local configuration:
+bun run wipe
+
+# Or wipe ALL channels, categories, and roles across the entire server:
+bun run wipe --all
+
+# Or only wipe roles (leaving channels and categories intact):
+bun run wipe --roles-only
+
+# Or wipe ALL roles across the entire server:
+bun run wipe --all --roles-only
+
+# Or only wipe channels, leaving categories and roles intact:
+bun run wipe --channels-only
+
+# Preview targets first with dry-run mode:
+bun run wipe --dry-run
 ```
 
 ---

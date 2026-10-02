@@ -16,12 +16,20 @@ import { ChannelType } from "../discord/types.js";
 export interface ExportOptions {
   outputDir?: string;
   singleFile?: boolean;
+  includeIds?: boolean;
+}
+
+export interface ExportConfigOptions {
+  includeIds?: boolean;
 }
 
 /**
  * Convert DiscordServerState into a clean, human-readable DiscordConfig object.
  */
-export function exportStateToConfig(state: DiscordServerState): DiscordConfig {
+export function exportStateToConfig(
+  state: DiscordServerState,
+  options: ExportConfigOptions = {},
+): DiscordConfig {
   const roles: RoleConfig[] = [];
   const categories: CategoryConfig[] = [];
   const channels: ChannelConfig[] = [];
@@ -36,6 +44,7 @@ export function exportStateToConfig(state: DiscordServerState): DiscordConfig {
 
     const roleConfig: RoleConfig = {
       name: role.name,
+      ...(options.includeIds ? { discord_id: role.id } : {}),
     };
 
     const hexColor = numberToHexColor(role.color);
@@ -60,6 +69,7 @@ export function exportStateToConfig(state: DiscordServerState): DiscordConfig {
     categories.push({
       name: cat.name ?? "unnamed-category",
       position: cat.position,
+      ...(options.includeIds ? { discord_id: cat.id } : {}),
     });
   }
   categories.sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
@@ -75,6 +85,7 @@ export function exportStateToConfig(state: DiscordServerState): DiscordConfig {
     const chanConfig: ChannelConfig = {
       name: chan.name ?? "unnamed-channel",
       type: chanType,
+      ...(options.includeIds ? { discord_id: chan.id } : {}),
     };
 
     if (parentCat?.name) {

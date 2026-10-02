@@ -1,12 +1,19 @@
 #!/usr/bin/env bun
 import { Command } from "commander";
 import { loadConfig } from "./config/loader.js";
+import type { DiscordConfig } from "./config/types.js";
 import { DiscordRestClient } from "./discord/client.js";
 import { fetchDiscordState } from "./discord/state.js";
 import { executePlan, formatExecutionResult } from "./executor/executor.js";
 import { exportStateToConfig, writeExportFiles } from "./exporter/exporter.js";
 import { formatPlanJson, formatPlanOutput, generatePlan } from "./planner/planner.js";
 import { formatVerificationOutput, verifyState } from "./verifier/verifier.js";
+import {
+  confirmWipeExecution,
+  executeWipe,
+  formatWipeTargets,
+  selectTargetsToWipe,
+} from "./wiper/wiper.js";
 import { ConfirmationAbortedError, DiscordInfraError } from "./utils/errors.js";
 import { format, symbols } from "./utils/format.js";
 import { logger } from "./utils/logger.js";
@@ -291,6 +298,10 @@ program
   .option("-o, --output <dir>", "Output directory for exported YAML files", "discord-export")
   .option("-g, --guild <id>", "Discord Guild ID")
   .option("--single-file", "Export everything into a single discord.yaml file")
+  .option(
+    "--include-ids",
+    "Include Discord Snowflake IDs (discord_id) in the exported configuration",
+  )
   .option("--json", "Output export summary in JSON format")
   .option("-v, --verbose", "Enable verbose debug logs")
   .action(async (options) => {
@@ -303,10 +314,11 @@ program
       const client = new DiscordRestClient();
       const state = await fetchDiscordState(client, guildId);
 
-      const config = exportStateToConfig(state);
+      const config = exportStateToConfig(state, { includeIds: options.includeIds });
       const { filesWritten } = writeExportFiles(config, {
         outputDir: options.output,
         singleFile: options.singleFile,
+        includeIds: options.includeIds,
       });
 
       if (options.json) {
@@ -343,6 +355,145 @@ program
         console.error(JSON.stringify({ error: (err as Error).message }, null, 2));
       } else {
         console.error(format.error(`Export failed:`));
+        console.error((err as Error).message);
+      }
+      process.exit(1);
+    }
+  });
+
+// ----------------------------------------------------
+// Command: wipe (alias: clear)
+// ----------------------------------------------------
+program
+  .command("wipe")
+  .alias("clear")
+  .description("Safely purge channels, categories, and roles from Discord or configuration")
+  .option("-c, --config <path>", "Path to YAML configuration directory or file")
+  .option("-g, --guild <id>", "Discord Guild ID")
+  .option("-a, --all", "Wipe ALL channels, categories, and roles in the Discord server")
+  .option("--config-only", "Wipe only resources declared in the configuration")
+  .option("--channels-only", "Only wipe channels, leaving categories and roles intact")
+  .option("--roles-only", "Only wipe roles, leaving channels and categories intact")
+  .option("--dry-run", "Preview resources to delete without making API calls")
+  .option("-y, --yes", "Automatically approve wipe (use with extreme caution)")
+  .option("--json", "Output results in JSON format")
+  .option("-v, --verbose", "Enable verbose debug logs")
+  .action(async (options) => {
+    if (options.verbose) {
+      logger.setLevel("debug");
+    }
+
+    try {
+      const guildId = getGuildId(options);
+      const client = new DiscordRestClient();
+      const state = await fetchDiscordState(client, guildId);
+
+      // Load config if --all is not specified, or if config is explicitly provided
+      let config: DiscordConfig | undefined;
+      if (!options.all || options.config || options.configOnly) {
+        try {
+          config = loadConfig({ configPath: options.config });
+        } catch (err) {
+          if (options.all) {
+            // Config is optional when --all is explicitly passed
+          } else {
+            throw new DiscordInfraError(
+              `Configuration required for wipe: ${(err as Error).message}\n` +
+                `Specify a valid config with --config <path> or use '--all' to wipe all server resources.`,
+            );
+          }
+        }
+      }
+
+      const targets = selectTargetsToWipe(state, config, {
+        all: options.all,
+        configOnly: options.configOnly,
+        channelsOnly: options.channelsOnly,
+        rolesOnly: options.rolesOnly,
+      });
+
+      if (!options.json) {
+        console.log(formatWipeTargets(targets, state.guild.name));
+      }
+
+      if (
+        targets.channels.length === 0 &&
+        targets.categories.length === 0 &&
+        (targets.roles?.length ?? 0) === 0
+      ) {
+        if (options.json) {
+          console.log(
+            JSON.stringify(
+              {
+                success: true,
+                message: "No channels, categories, or roles to wipe.",
+                deletedChannelsCount: 0,
+                deletedCategoriesCount: 0,
+                deletedRolesCount: 0,
+              },
+              null,
+              2,
+            ),
+          );
+        } else {
+          console.log(format.info("\nNothing to wipe. Guild is already clean."));
+        }
+        return;
+      }
+
+      // Explicit red confirmation banner
+      await confirmWipeExecution(targets, state.guild.name, {
+        autoApprove: options.yes,
+        interactive: !options.yes,
+      });
+
+      // Execute deletion
+      const result = await executeWipe(targets, client, {
+        guildId,
+        dryRun: options.dryRun,
+        onProgress: (msg) => {
+          if (!options.json) {
+            console.log(format.dim(`  ${msg}`));
+          }
+        },
+      });
+
+      if (options.json) {
+        console.log(JSON.stringify(result, null, 2));
+      } else {
+        console.log("");
+        if (options.dryRun) {
+          console.log(format.info("Dry-run complete. No resources were deleted."));
+        } else {
+          console.log(
+            format.success(
+              `✓ Successfully wiped ${result.deletedChannels.length} channel(s), ${result.deletedCategories.length} category(ies), and ${result.deletedRoles.length} role(s).`,
+            ),
+          );
+          if (result.failed.length > 0) {
+            console.log(
+              format.error(
+                `! Failed to delete ${result.failed.length} resource(s):\n  - ` +
+                  result.failed.map((f) => `${f.name} (${f.id}): ${f.error}`).join("\n  - "),
+              ),
+            );
+          }
+        }
+      }
+
+      if (result.failed.length > 0) {
+        process.exit(1);
+      }
+    } catch (err) {
+      if (err instanceof ConfirmationAbortedError) {
+        console.log(format.dim(`\n${err.message}`));
+        process.exit(130);
+      }
+
+      if (options.json) {
+        console.error(JSON.stringify({ error: (err as Error).message }, null, 2));
+      } else {
+        console.error(format.error(`\nWipe failed:`));
         console.error((err as Error).message);
       }
       process.exit(1);

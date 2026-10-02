@@ -1,6 +1,9 @@
 roles:
-  - name: GM
-    color: "#9B59B6" # Amethyst Purple
+  # ==========================================
+  # Staff & Administration Roles
+  # ==========================================
+  - name: Dungeon Master
+    color: "#9B59B6" # Royal Amethyst - Supreme realm administrator
     hoist: true
     mentionable: true
     permissions:
@@ -14,9 +17,11 @@ roles:
       - read_message_history
       - attach_files
       - embed_links
+      - moderate_members
+      - view_audit_log
 
-  - name: MOD
-    color: "#3498DB" # Blue
+  - name: Paladin
+    color: "#3498DB" # Cobalt Blue - Guardian of order and moderator
     hoist: true
     mentionable: true
     permissions:
@@ -24,12 +29,25 @@ roles:
       - send_messages
       - manage_messages
       - kick_members
+      - moderate_members
       - read_message_history
       - attach_files
       - embed_links
 
-  - name: DEVELOPER
-    color: "#E67E22" # Orange
+  - name: Artificer
+    color: "#E67E22" # Forge Orange - Realm builder, engineer and developer
+    hoist: true
+    mentionable: true
+    permissions:
+      - view_channel
+      - send_messages
+      - read_message_history
+      - attach_files
+      - embed_links
+      - use_application_commands
+
+  - name: Cleric
+    color: "#2ECC71" # Emerald Green - Healer, guide and community support
     hoist: true
     mentionable: true
     permissions:
@@ -39,11 +57,68 @@ roles:
       - attach_files
       - embed_links
 
-  - name: SUPPORT
-    color: "#2ECC71" # Green
+  # ==========================================
+  # Adventurer Progression Ranks (Community Tiers)
+  # ==========================================
+  - name: Mythic Legend
+    color: "#F1C40F" # Radiant Gold - Elite realm champions and top contributors
+    hoist: true
+    mentionable: false
+    permissions:
+      - view_channel
+      - send_messages
+      - read_message_history
+      - attach_files
+      - embed_links
+      - add_reactions
+      - use_external_emojis
+      - use_external_stickers
+      - create_public_threads
+      - send_messages_in_threads
+
+  - name: Champion
+    color: "#E91E63" # Dragon Crimson - Accomplished heroes of the realm
+    hoist: true
+    mentionable: false
+    permissions:
+      - view_channel
+      - send_messages
+      - read_message_history
+      - attach_files
+      - embed_links
+      - add_reactions
+      - use_external_emojis
+
+  - name: Veteran
+    color: "#1ABC9C" # Mythril Teal - Seasoned quest-goers and regulars
+    hoist: true
+    mentionable: false
+    permissions:
+      - view_channel
+      - send_messages
+      - read_message_history
+      - attach_files
+      - embed_links
+      - add_reactions
+
+  - name: Adventurer
+    color: "#34495E" # Steel Slate - Proven community travelers
     hoist: false
     mentionable: false
     permissions:
       - view_channel
       - send_messages
       - read_message_history
+      - attach_files
+      - embed_links
+      - add_reactions
+
+  - name: Novice
+    color: "#95A5A6" # Apprentice Silver - Newcomers beginning their journey
+    hoist: false
+    mentionable: false
+    permissions:
+      - view_channel
+      - send_messages
+      - read_message_history
+      - add_reactions

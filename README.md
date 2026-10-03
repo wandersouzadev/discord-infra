@@ -61,6 +61,8 @@ bun install
 
 ```bash
 bun run dev          # Run CLI entrypoint
+bun run preview      # Generate visual HTML preview of server
+bun run preview:open # Generate and open HTML preview in browser
 bun test             # Run Vitest test suite
 bun run lint         # Run ESLint checks
 bun run format       # Run Prettier formatter
@@ -236,7 +238,31 @@ bun run validate
 bun run validate --json
 ```
 
-### 2. Plan (Preview Changes)
+### 2. Visual HTML Preview (Offline)
+
+Generate an interactive, standalone HTML dashboard with Discord dark mode styling to visualize roles hierarchy, channels by category, topic and slowmode badges, and an interactive permissions matrix:
+
+```bash
+# Generate preview HTML (discord-preview.html):
+bun run preview
+
+# Generate and automatically open in default browser:
+bun run preview:open
+# or:
+bun run preview --open
+
+# Custom output file and server title:
+bun run preview -o my-server.html --title "My Community Server"
+```
+
+Features included in the visual preview:
+
+- **Discord Explorer**: Faithful Discord UI simulation with collapsible categories, channel type icons, private locks, and topic inspector.
+- **Roles & Hierarchy**: Role positions, exact hex colors, hoist/mentionable badges, and granted permission chips.
+- **Permissions Matrix**: Full grid mapping channels/categories against roles (Allow, Read-Only, Denied, Inherited) with click-to-view details.
+- **Self-contained & Portable**: Single HTML file with zero external dependencies, works completely offline.
+
+### 3. Plan (Preview Changes)
 
 Fetch current Discord state, compute the diff against desired state, and output the ordered operation plan:
 
@@ -273,7 +299,7 @@ Summary:
   Destructive: 0
 ```
 
-### 3. Apply (Infrastructure Changes)
+### 4. Apply (Infrastructure Changes)
 
 Apply the plan in safe dependency order and verify results:
 
@@ -287,7 +313,7 @@ In automated CI environments:
 bun run apply --yes
 ```
 
-### 4. Verify & Drift Detection
+### 5. Verify & Drift Detection
 
 Verify if live Discord server state matches your repository. Returns exit code `0` if in sync, `1` if drift exists:
 
@@ -297,7 +323,7 @@ bun run verify
 bun run verify --json
 ```
 
-### 5. Export Existing Server
+### 6. Export Existing Server
 
 Export an existing Discord server's roles, categories, channels, and permissions into Git-ready YAML files:
 
@@ -309,7 +335,7 @@ bun run export --output discord-export --include-ids
 bun run export --output discord-export --single-file
 ```
 
-### 6. Wipe / Clear Channels and Roles
+### 7. Wipe / Clear Channels and Roles
 
 Safely purge channels, categories, and roles from Discord or configuration, protected by an explicit red warning banner and confirmation:
 

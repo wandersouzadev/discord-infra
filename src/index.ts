@@ -8,6 +8,8 @@ import { exportStateToConfig, writeExportFiles, type ExportOptions } from "./exp
 import { generatePlan } from "./planner/planner.js";
 import type { Plan } from "./planner/types.js";
 import { verifyState, type VerificationResult } from "./verifier/verifier.js";
+import { writePreviewHtml } from "./preview/generator.js";
+import type { PreviewFileOptions, PreviewResult } from "./preview/types.js";
 
 export * from "./config/types.js";
 export * from "./config/schema.js";
@@ -24,6 +26,8 @@ export * from "./executor/executor.js";
 export * from "./verifier/verifier.js";
 export * from "./exporter/exporter.js";
 export * from "./wiper/wiper.js";
+export * from "./preview/types.js";
+export * from "./preview/generator.js";
 export * from "./utils/errors.js";
 export * from "./utils/logger.js";
 export * from "./utils/format.js";
@@ -116,4 +120,12 @@ export async function exportInfrastructure(
   const config = exportStateToConfig(state);
   const { filesWritten } = writeExportFiles(config, options);
   return { config, filesWritten };
+}
+
+/**
+ * Generate visual HTML preview from declarative YAML files.
+ */
+export function preview(options: PreviewFileOptions = {}): PreviewResult {
+  const config = loadConfig({ configPath: options.configPath });
+  return writePreviewHtml(config, options);
 }

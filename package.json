@@ -19,6 +19,8 @@
     "wipe:all": "bun run src/cli.ts wipe --all",
     "wipe:roles": "bun run src/cli.ts wipe --roles-only",
     "clear": "bun run src/cli.ts clear",
+    "preview": "bun run src/cli.ts preview",
+    "preview:open": "bun run src/cli.ts preview --open",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",

@@ -17,6 +17,7 @@ import {
 import { ConfirmationAbortedError, DiscordInfraError } from "./utils/errors.js";
 import { format, symbols } from "./utils/format.js";
 import { logger } from "./utils/logger.js";
+import { writePreviewHtml } from "./preview/generator.js";
 
 const program = new Command();
 
@@ -494,6 +495,74 @@ program
         console.error(JSON.stringify({ error: (err as Error).message }, null, 2));
       } else {
         console.error(format.error(`\nWipe failed:`));
+        console.error((err as Error).message);
+      }
+      process.exit(1);
+    }
+  });
+
+// ----------------------------------------------------
+// Command: preview (aliases: html, render, visualize)
+// ----------------------------------------------------
+program
+  .command("preview")
+  .alias("html")
+  .alias("render")
+  .alias("visualize")
+  .description("Generate an interactive visual HTML preview of roles, channels, and categories")
+  .option("-c, --config <path>", "Path to YAML configuration directory or file")
+  .option("-o, --output <path>", "Output HTML file path", "discord-preview.html")
+  .option("--title <title>", "Custom server title displayed in preview")
+  .option("--open", "Automatically open generated preview in default browser")
+  .option("--json", "Output preview generation summary in JSON format")
+  .action((options) => {
+    try {
+      const config = loadConfig({ configPath: options.config });
+      const result = writePreviewHtml(config, {
+        output: options.output,
+        title: options.title,
+        open: options.open,
+      });
+
+      if (options.json) {
+        console.log(
+          JSON.stringify(
+            {
+              success: true,
+              outputPath: result.outputPath,
+              rolesCount: result.rolesCount,
+              categoriesCount: result.categoriesCount,
+              channelsCount: result.channelsCount,
+              privateChannelsCount: result.privateChannelsCount,
+            },
+            null,
+            2,
+          ),
+        );
+      } else {
+        console.log(format.success("\nVisual HTML preview generated successfully!"));
+        console.log(`  File: ${format.bold(result.outputPath)}`);
+        console.log(
+          format.dim(
+            `  Categories: ${result.categoriesCount} | ` +
+              `Channels: ${result.channelsCount} | ` +
+              `Roles: ${result.rolesCount} | ` +
+              `Private Channels: ${result.privateChannelsCount}`,
+          ),
+        );
+        if (options.open) {
+          console.log(format.dim("  Opening preview in default browser..."));
+        } else {
+          console.log(
+            format.dim(`  Tip: Open in your browser or run with '--open' to launch automatically.`),
+          );
+        }
+      }
+    } catch (err) {
+      if (options.json) {
+        console.error(JSON.stringify({ error: (err as Error).message }, null, 2));
+      } else {
+        console.error(format.error(`Preview generation failed:`));
         console.error((err as Error).message);
       }
       process.exit(1);

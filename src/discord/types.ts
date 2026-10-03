@@ -182,3 +182,25 @@ export interface DiscordApiErrorResponse {
   code: number;
   errors?: Record<string, unknown>;
 }
+
+export interface DiscordEmoji {
+  id: string;
+  name: string | null;
+  roles?: string[];
+  user?: DiscordUser;
+  require_colons?: boolean;
+  managed?: boolean;
+  animated?: boolean;
+  available?: boolean;
+}
+
+export interface CreateEmojiPayload {
+  name: string;
+  image: string; // Data URI scheme (data:image/png;base64,...)
+  roles?: string[];
+}
+
+export interface ModifyEmojiPayload {
+  name?: string;
+  roles?: string[] | null;
+}

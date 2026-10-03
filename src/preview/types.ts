@@ -15,6 +15,7 @@ export interface PreviewResult {
   categoriesCount: number;
   channelsCount: number;
   privateChannelsCount: number;
+  emojisCount?: number;
 }
 
 export interface ResolvedChannelPermission {

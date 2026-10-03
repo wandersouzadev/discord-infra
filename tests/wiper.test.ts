@@ -193,6 +193,9 @@ describe("Wiper and Purge Engine", () => {
       [chanStaffChat.id, chanStaffChat],
       [chanUnmanaged.id, chanUnmanaged],
     ]),
+    emojis: [],
+    emojisByName: new Map(),
+    emojisById: new Map(),
   };
 
   describe("Target Selection", () => {

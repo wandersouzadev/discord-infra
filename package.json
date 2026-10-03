@@ -18,6 +18,7 @@
     "wipe": "bun run src/cli.ts wipe",
     "wipe:all": "bun run src/cli.ts wipe --all",
     "wipe:roles": "bun run src/cli.ts wipe --roles-only",
+    "wipe:emojis": "bun run src/cli.ts wipe --emojis-only",
     "clear": "bun run src/cli.ts clear",
     "preview": "bun run src/cli.ts preview",
     "preview:open": "bun run src/cli.ts preview --open",

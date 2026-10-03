@@ -1,5 +1,6 @@
-import type { DiscordConfig } from "../config/types.js";
+import { resolveEmojiDataUri } from "../config/loader.js";
 import { parseColorToNumber } from "../config/schema.js";
+import type { DiscordConfig } from "../config/types.js";
 import { checkRoleManageability } from "../discord/hierarchy.js";
 import {
   overwritesToPermissionMap,
@@ -7,9 +8,15 @@ import {
   permissionsToBitfield,
 } from "../discord/permissions.js";
 import type { DiscordServerState } from "../discord/state.js";
-import { ChannelType, type DiscordChannel, type DiscordRole } from "../discord/types.js";
+import {
+  ChannelType,
+  type DiscordChannel,
+  type DiscordEmoji,
+  type DiscordRole,
+} from "../discord/types.js";
 import type {
   ChannelOperationPayload,
+  EmojiOperationPayload,
   Operation,
   PermissionOperationPayload,
   PropertyChange,
@@ -43,6 +50,7 @@ export function computeDiff(desired: DiscordConfig, current: DiscordServerState)
     roles: [],
     categories: [],
     channels: [],
+    emojis: [],
   };
 
   // ----------------------------------------------------
@@ -631,6 +639,157 @@ export function computeDiff(desired: DiscordConfig, current: DiscordServerState)
           dependsOn: roleDependsOn,
         });
       }
+    }
+  }
+
+  // ----------------------------------------------------
+  // 5. Emojis Diffing
+  // ----------------------------------------------------
+  const matchedEmojiIds = new Set<string>();
+
+  for (const desiredEmoji of desired.emojis ?? []) {
+    const lowerName = desiredEmoji.name.toLowerCase();
+
+    let existingEmoji: DiscordEmoji | undefined;
+    if (desiredEmoji.discord_id) {
+      existingEmoji = current.emojisById.get(desiredEmoji.discord_id);
+    }
+    if (!existingEmoji) {
+      existingEmoji = current.emojisByName.get(lowerName);
+    }
+
+    if (!existingEmoji) {
+      // EMOJI CREATION
+      const opId = nextOpId("emoji-create");
+      const dependsOn: string[] = [];
+
+      // Check if allowed roles depend on roles being created and map existing roles
+      const roleMap: Record<string, string> = {};
+      if (desiredEmoji.roles) {
+        for (const roleName of desiredEmoji.roles) {
+          const lowerRole = roleName.toLowerCase();
+          const existingRole = current.rolesByName.get(lowerRole);
+          if (existingRole) {
+            roleMap[lowerRole] = existingRole.id;
+          }
+          const roleOpId = createdRoleOpIds.get(lowerRole);
+          if (roleOpId) {
+            dependsOn.push(roleOpId);
+          }
+        }
+      }
+
+      let imageDataUri: string | undefined;
+      try {
+        imageDataUri = resolveEmojiDataUri(desiredEmoji);
+      } catch {
+        imageDataUri = desiredEmoji.image;
+      }
+
+      const payload: EmojiOperationPayload = {
+        name: desiredEmoji.name,
+        image: imageDataUri,
+        roles: desiredEmoji.roles,
+        roleMap,
+        file: desiredEmoji.file,
+      };
+
+      operations.push({
+        id: opId,
+        type: "CREATE_EMOJI",
+        resourceType: "emoji",
+        resourceName: `:${desiredEmoji.name}:`,
+        isDestructive: false,
+        description: `Create emoji: :${desiredEmoji.name}:`,
+        changes: [{ property: "name", oldValue: null, newValue: desiredEmoji.name }],
+        payload,
+        dependsOn,
+      });
+    } else {
+      // EMOJI EXISTS - check for updates
+      matchedEmojiIds.add(existingEmoji.id);
+
+      const changes: PropertyChange[] = [];
+      const dependsOn: string[] = [];
+      const roleMap: Record<string, string> = {};
+
+      // Check name change (e.g. matched by discord_id)
+      if (existingEmoji.name && existingEmoji.name !== desiredEmoji.name) {
+        changes.push({
+          property: "name",
+          oldValue: existingEmoji.name,
+          newValue: desiredEmoji.name,
+        });
+      }
+
+      // Check roles change
+      if (desiredEmoji.roles !== undefined) {
+        // Convert existing role IDs to role names
+        const existingRoleNames = (existingEmoji.roles ?? [])
+          .map((rId) => current.rolesById.get(rId)?.name)
+          .filter((name): name is string => Boolean(name))
+          .sort();
+
+        const desiredRoleNames = [...desiredEmoji.roles].sort();
+
+        const rolesChanged =
+          existingRoleNames.length !== desiredRoleNames.length ||
+          existingRoleNames.some(
+            (r, idx) => r.toLowerCase() !== desiredRoleNames[idx]?.toLowerCase(),
+          );
+
+        for (const roleName of desiredEmoji.roles) {
+          const lowerRole = roleName.toLowerCase();
+          const existingRole = current.rolesByName.get(lowerRole);
+          if (existingRole) {
+            roleMap[lowerRole] = existingRole.id;
+          }
+          const roleOpId = createdRoleOpIds.get(lowerRole);
+          if (roleOpId) {
+            dependsOn.push(roleOpId);
+          }
+        }
+
+        if (rolesChanged) {
+          changes.push({
+            property: "roles",
+            oldValue: existingRoleNames,
+            newValue: desiredRoleNames,
+          });
+        }
+      }
+
+      if (changes.length > 0) {
+        const payload: EmojiOperationPayload = {
+          name: desiredEmoji.name,
+          roles: desiredEmoji.roles,
+          roleMap,
+        };
+
+        operations.push({
+          id: nextOpId("emoji-update"),
+          type: "UPDATE_EMOJI",
+          resourceType: "emoji",
+          resourceName: `:${desiredEmoji.name}:`,
+          resourceId: existingEmoji.id,
+          isDestructive: false,
+          description: `Update emoji: :${desiredEmoji.name}:`,
+          changes,
+          payload,
+          dependsOn,
+        });
+      }
+    }
+  }
+
+  // Detect unmanaged emojis (skip bot/integration managed emojis)
+  for (const currentEmoji of current.emojis ?? []) {
+    if (currentEmoji.managed) continue;
+    if (!matchedEmojiIds.has(currentEmoji.id)) {
+      unmanaged.emojis.push({
+        id: currentEmoji.id,
+        name: currentEmoji.name ?? "unnamed",
+      });
     }
   }
 

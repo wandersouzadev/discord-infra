@@ -44,6 +44,7 @@ export function formatPlanOutput(plan: Plan): string {
 
   // Group operations by resource type
   const roles = plan.operations.filter((op) => op.resourceType === "role");
+  const emojis = plan.operations.filter((op) => op.resourceType === "emoji");
   const categories = plan.operations.filter((op) => op.resourceType === "category");
   const channels = plan.operations.filter((op) => op.resourceType === "channel");
   const permissions = plan.operations.filter((op) => op.resourceType === "permission");
@@ -74,6 +75,14 @@ export function formatPlanOutput(plan: Plan): string {
   if (roles.length > 0) {
     lines.push(format.bold("Roles"));
     for (const op of roles) {
+      lines.push(renderOp(op));
+    }
+    lines.push("");
+  }
+
+  if (emojis.length > 0) {
+    lines.push(format.bold("Emojis"));
+    for (const op of emojis) {
       lines.push(renderOp(op));
     }
     lines.push("");

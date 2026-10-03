@@ -2,7 +2,7 @@ import type { DiscordConfig } from "../config/types.js";
 import type { DiscordRestClient } from "../discord/client.js";
 import { checkRoleManageability } from "../discord/hierarchy.js";
 import type { DiscordServerState } from "../discord/state.js";
-import type { DiscordChannel, DiscordRole } from "../discord/types.js";
+import type { DiscordChannel, DiscordEmoji, DiscordRole } from "../discord/types.js";
 import { askQuestion } from "../executor/confirmation.js";
 import { ConfirmationAbortedError, SafetyError } from "../utils/errors.js";
 import { format, symbols } from "../utils/format.js";
@@ -13,6 +13,7 @@ export interface WipeTargetOptions {
   configOnly?: boolean;
   channelsOnly?: boolean;
   rolesOnly?: boolean;
+  emojisOnly?: boolean;
 }
 
 export interface WipeOptions extends WipeTargetOptions {
@@ -27,13 +28,20 @@ export interface WipeTargets {
   channels: DiscordChannel[];
   categories: DiscordChannel[];
   roles?: DiscordRole[];
+  emojis?: DiscordEmoji[];
 }
 
 export interface WipeResult {
   deletedChannels: Array<{ id: string; name: string }>;
   deletedCategories: Array<{ id: string; name: string }>;
   deletedRoles: Array<{ id: string; name: string }>;
-  failed: Array<{ id: string; name: string; type: "channel" | "category" | "role"; error: string }>;
+  deletedEmojis: Array<{ id: string; name: string }>;
+  failed: Array<{
+    id: string;
+    name: string;
+    type: "channel" | "category" | "role" | "emoji";
+    error: string;
+  }>;
   dryRun: boolean;
 }
 
@@ -120,7 +128,7 @@ export function selectTargetsToWipe(
 
   // --- Roles Selection ---
   let matchedRoles: DiscordRole[] = [];
-  if (!options.channelsOnly) {
+  if (!options.channelsOnly && !options.emojisOnly) {
     if (useConfig) {
       const desiredRoleNames = new Set((config?.roles ?? []).map((r) => r.name.toLowerCase()));
       const normalizedDesiredRoleNames = new Set(
@@ -170,10 +178,37 @@ export function selectTargetsToWipe(
     matchedRoles.sort((a, b) => (b.position ?? 0) - (a.position ?? 0));
   }
 
+  // --- Emojis Selection ---
+  let matchedEmojis: DiscordEmoji[] = [];
+  if (!options.rolesOnly && !options.channelsOnly) {
+    if (useConfig) {
+      const desiredEmojiNames = new Set((config?.emojis ?? []).map((e) => e.name.toLowerCase()));
+      const desiredEmojiIds = new Set(
+        (config?.emojis ?? []).map((e) => e.discord_id).filter((id): id is string => Boolean(id)),
+      );
+
+      matchedEmojis = (state.emojis ?? []).filter((emoji) => {
+        if (emoji.managed) return false;
+        if (desiredEmojiIds.has(emoji.id)) return true;
+        if (!emoji.name) return false;
+        return desiredEmojiNames.has(emoji.name.toLowerCase());
+      });
+    } else {
+      matchedEmojis = (state.emojis ?? []).filter((emoji) => !emoji.managed);
+    }
+  }
+
+  if (options.emojisOnly) {
+    matchedChannels = [];
+    matchedCategories = [];
+    matchedRoles = [];
+  }
+
   return {
     channels: matchedChannels,
     categories: matchedCategories,
     roles: matchedRoles,
+    emojis: matchedEmojis,
   };
 }
 
@@ -184,12 +219,18 @@ export function formatWipeTargets(targets: WipeTargets, guildName: string): stri
   const channels = targets.channels ?? [];
   const categories = targets.categories ?? [];
   const roles = targets.roles ?? [];
+  const emojis = targets.emojis ?? [];
 
   const lines: string[] = [];
   lines.push(format.bold(`Wipe Targets on "${guildName}":`));
 
-  if (channels.length === 0 && categories.length === 0 && roles.length === 0) {
-    lines.push(format.dim("  No channels, categories, or roles match the wipe criteria."));
+  if (
+    channels.length === 0 &&
+    categories.length === 0 &&
+    roles.length === 0 &&
+    emojis.length === 0
+  ) {
+    lines.push(format.dim("  No channels, categories, roles, or emojis match the wipe criteria."));
     return lines.join("\n");
   }
 
@@ -211,6 +252,15 @@ export function formatWipeTargets(targets: WipeTargets, guildName: string): stri
     lines.push(format.bold(`\n  Roles (${roles.length}):`));
     for (const role of roles) {
       lines.push(`    ${symbols.remove} @${role.name} ${format.dim(`(${role.id})`)}`);
+    }
+  }
+
+  if (emojis.length > 0) {
+    lines.push(format.bold(`\n  Emojis (${emojis.length}):`));
+    for (const emoji of emojis) {
+      lines.push(
+        `    ${symbols.remove} :${emoji.name ?? "unnamed"}: ${format.dim(`(${emoji.id})`)}`,
+      );
     }
   }
 
@@ -239,7 +289,8 @@ export async function confirmWipeExecution(
   const channels = targets.channels ?? [];
   const categories = targets.categories ?? [];
   const roles = targets.roles ?? [];
-  const total = channels.length + categories.length + roles.length;
+  const emojis = targets.emojis ?? [];
+  const total = channels.length + categories.length + roles.length + emojis.length;
   if (total === 0) {
     return;
   }
@@ -253,6 +304,7 @@ export async function confirmWipeExecution(
     `║    • ${String(channels.length).padEnd(4)} channel(s)                                                  ║`,
     `║    • ${String(categories.length).padEnd(4)} category(ies)                                               ║`,
     `║    • ${String(roles.length).padEnd(4)} role(s)                                                      ║`,
+    `║    • ${String(emojis.length).padEnd(4)} emoji(s)                                                     ║`,
     `║  from server: "${guildName.slice(0, 56).padEnd(56)}" ║`,
     "║                                                                              ║",
     "║  ALL message history, channel settings, and role configurations will be      ║",
@@ -294,6 +346,7 @@ export async function executeWipe(
     deletedChannels: [],
     deletedCategories: [],
     deletedRoles: [],
+    deletedEmojis: [],
     failed: [],
     dryRun: Boolean(options.dryRun),
   };
@@ -302,6 +355,7 @@ export async function executeWipe(
   const channels = targets.channels ?? [];
   const categories = targets.categories ?? [];
   const roles = targets.roles ?? [];
+  const emojis = targets.emojis ?? [];
 
   // 1. Delete Channels First
   for (const chan of channels) {
@@ -375,6 +429,33 @@ export async function executeWipe(
         id: role.id,
         name: role.name,
         type: "role",
+        error: (err as Error).message,
+      });
+    }
+  }
+
+  // 4. Delete Emojis Fourth
+  for (const emoji of emojis) {
+    const displayName = `:${emoji.name ?? "unnamed"}:`;
+    if (options.dryRun) {
+      options.onProgress?.(`[DRY-RUN] Would delete emoji ${displayName} (${emoji.id})`);
+      result.deletedEmojis.push({ id: emoji.id, name: emoji.name ?? "unnamed" });
+      continue;
+    }
+
+    try {
+      options.onProgress?.(`[-] Deleting emoji ${displayName} (${emoji.id})...`);
+      const targetGuildId = options.guildId ?? "";
+      await client.deleteEmoji(targetGuildId, emoji.id, auditReason);
+      result.deletedEmojis.push({ id: emoji.id, name: emoji.name ?? "unnamed" });
+    } catch (err) {
+      logger.error(
+        `Failed to delete emoji ${displayName} (${emoji.id}): ${(err as Error).message}`,
+      );
+      result.failed.push({
+        id: emoji.id,
+        name: emoji.name ?? "unnamed",
+        type: "emoji",
         error: (err as Error).message,
       });
     }

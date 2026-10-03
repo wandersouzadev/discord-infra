@@ -267,6 +267,7 @@ export function preparePreviewData(config: DiscordConfig) {
     uncategorizedChannels,
     totalChannels,
     privateChannelsCount,
+    emojis: config.emojis ?? [],
   };
 }
 
@@ -1846,5 +1847,6 @@ export function writePreviewHtml(
     categoriesCount: data.categories.length,
     channelsCount: data.totalChannels,
     privateChannelsCount: data.privateChannelsCount,
+    emojisCount: config.emojis?.length ?? 0,
   };
 }

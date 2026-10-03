@@ -1,6 +1,12 @@
 import type { DiscordRestClient } from "./client.js";
 import { buildBotGuildContext, type BotGuildContext } from "./hierarchy.js";
-import { ChannelType, type DiscordChannel, type DiscordGuild, type DiscordRole } from "./types.js";
+import {
+  ChannelType,
+  type DiscordChannel,
+  type DiscordEmoji,
+  type DiscordGuild,
+  type DiscordRole,
+} from "./types.js";
 
 export interface DiscordServerState {
   guild: DiscordGuild;
@@ -8,12 +14,15 @@ export interface DiscordServerState {
   roles: DiscordRole[];
   categories: DiscordChannel[];
   channels: DiscordChannel[];
+  emojis: DiscordEmoji[];
   rolesByName: Map<string, DiscordRole>;
   rolesById: Map<string, DiscordRole>;
   categoriesByName: Map<string, DiscordChannel>;
   categoriesById: Map<string, DiscordChannel>;
   channelsByName: Map<string, DiscordChannel[]>; // multiple channels can share names in different categories
   channelsById: Map<string, DiscordChannel>;
+  emojisByName: Map<string, DiscordEmoji>;
+  emojisById: Map<string, DiscordEmoji>;
 }
 
 /**
@@ -23,11 +32,12 @@ export async function fetchDiscordState(
   client: DiscordRestClient,
   guildId: string,
 ): Promise<DiscordServerState> {
-  const [guild, currentUser, rawRoles, rawChannels] = await Promise.all([
+  const [guild, currentUser, rawRoles, rawChannels, rawEmojis] = await Promise.all([
     client.getGuild(guildId),
     client.getCurrentUser(),
     client.getRoles(guildId),
     client.getChannels(guildId),
+    client.getEmojis(guildId),
   ]);
 
   const botMember = await client.getGuildMember(guildId, currentUser.id);
@@ -70,6 +80,15 @@ export async function fetchDiscordState(
     channelsById.set(chan.id, chan);
   }
 
+  const emojisByName = new Map<string, DiscordEmoji>();
+  const emojisById = new Map<string, DiscordEmoji>();
+  for (const emoji of rawEmojis) {
+    if (emoji.name) {
+      emojisByName.set(emoji.name.toLowerCase(), emoji);
+    }
+    emojisById.set(emoji.id, emoji);
+  }
+
   const botContext = buildBotGuildContext(currentUser, guild, botMember, rawRoles);
 
   return {
@@ -78,11 +97,14 @@ export async function fetchDiscordState(
     roles: rawRoles,
     categories,
     channels,
+    emojis: rawEmojis,
     rolesByName,
     rolesById,
     categoriesByName,
     categoriesById,
     channelsByName,
     channelsById,
+    emojisByName,
+    emojisById,
   };
 }

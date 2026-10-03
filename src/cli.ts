@@ -53,6 +53,7 @@ program
             {
               valid: true,
               rolesCount: config.roles?.length ?? 0,
+              emojisCount: config.emojis?.length ?? 0,
               categoriesCount: config.categories?.length ?? 0,
               channelsCount: config.channels?.length ?? 0,
               permissionsTargetsCount: Object.keys(config.permissions ?? {}).length,
@@ -66,6 +67,7 @@ program
         console.log(
           format.dim(
             `  Roles: ${config.roles?.length ?? 0} | ` +
+              `Emojis: ${config.emojis?.length ?? 0} | ` +
               `Categories: ${config.categories?.length ?? 0} | ` +
               `Channels: ${config.channels?.length ?? 0} | ` +
               `Permission Targets: ${Object.keys(config.permissions ?? {}).length}`,
@@ -330,6 +332,7 @@ program
               outputDir: options.output,
               filesWritten,
               rolesCount: config.roles?.length ?? 0,
+              emojisCount: config.emojis?.length ?? 0,
               categoriesCount: config.categories?.length ?? 0,
               channelsCount: config.channels?.length ?? 0,
             },
@@ -346,6 +349,7 @@ program
         console.log(
           format.dim(
             `\nExported ${config.roles?.length ?? 0} roles, ` +
+              `${config.emojis?.length ?? 0} emojis, ` +
               `${config.categories?.length ?? 0} categories, ` +
               `and ${config.channels?.length ?? 0} channels.`,
           ),
@@ -375,6 +379,7 @@ program
   .option("--config-only", "Wipe only resources declared in the configuration")
   .option("--channels-only", "Only wipe channels, leaving categories and roles intact")
   .option("--roles-only", "Only wipe roles, leaving channels and categories intact")
+  .option("--emojis-only", "Only wipe emojis, leaving channels, categories, and roles intact")
   .option("--dry-run", "Preview resources to delete without making API calls")
   .option("-y, --yes", "Automatically approve wipe (use with extreme caution)")
   .option("--json", "Output results in JSON format")
@@ -411,6 +416,7 @@ program
         configOnly: options.configOnly,
         channelsOnly: options.channelsOnly,
         rolesOnly: options.rolesOnly,
+        emojisOnly: options.emojisOnly,
       });
 
       if (!options.json) {
@@ -420,17 +426,19 @@ program
       if (
         targets.channels.length === 0 &&
         targets.categories.length === 0 &&
-        (targets.roles?.length ?? 0) === 0
+        (targets.roles?.length ?? 0) === 0 &&
+        (targets.emojis?.length ?? 0) === 0
       ) {
         if (options.json) {
           console.log(
             JSON.stringify(
               {
                 success: true,
-                message: "No channels, categories, or roles to wipe.",
+                message: "No channels, categories, roles, or emojis to wipe.",
                 deletedChannelsCount: 0,
                 deletedCategoriesCount: 0,
                 deletedRolesCount: 0,
+                deletedEmojisCount: 0,
               },
               null,
               2,
@@ -468,7 +476,7 @@ program
         } else {
           console.log(
             format.success(
-              `✓ Successfully wiped ${result.deletedChannels.length} channel(s), ${result.deletedCategories.length} category(ies), and ${result.deletedRoles.length} role(s).`,
+              `✓ Successfully wiped ${result.deletedChannels.length} channel(s), ${result.deletedCategories.length} category(ies), ${result.deletedRoles.length} role(s), and ${result.deletedEmojis.length} emoji(s).`,
             ),
           );
           if (result.failed.length > 0) {
@@ -531,6 +539,7 @@ program
               success: true,
               outputPath: result.outputPath,
               rolesCount: result.rolesCount,
+              emojisCount: result.emojisCount ?? 0,
               categoriesCount: result.categoriesCount,
               channelsCount: result.channelsCount,
               privateChannelsCount: result.privateChannelsCount,
@@ -547,6 +556,7 @@ program
             `  Categories: ${result.categoriesCount} | ` +
               `Channels: ${result.channelsCount} | ` +
               `Roles: ${result.rolesCount} | ` +
+              `Emojis: ${result.emojisCount ?? 0} | ` +
               `Private Channels: ${result.privateChannelsCount}`,
           ),
         );

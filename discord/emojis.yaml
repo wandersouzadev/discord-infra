@@ -1,0 +1,12 @@
+emojis:
+  # ==========================================
+  # Realm Custom Emojis
+  # ==========================================
+  - name: realm_sword
+    file: emojis/realm_sword.png
+    roles:
+      - Paladin
+      - Dungeon Master
+
+  - name: mana_potion
+    file: emojis/mana_potion.png

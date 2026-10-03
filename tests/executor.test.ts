@@ -40,7 +40,7 @@ describe("Executor Engine", () => {
       total: 2,
     },
     hierarchyWarnings: [],
-    unmanaged: { roles: [], categories: [], channels: [] },
+    unmanaged: { roles: [], categories: [], channels: [], emojis: [] },
   };
 
   it("executes operations in dry-run mode without calling API", async () => {

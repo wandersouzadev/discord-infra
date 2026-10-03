@@ -99,6 +99,9 @@ describe("Planner and Diff Engine", () => {
     categoriesById: new Map([[existingStaffCat.id, existingStaffCat]]),
     channelsByName: new Map([["staff-chat", [existingStaffChat]]]),
     channelsById: new Map([[existingStaffChat.id, existingStaffChat]]),
+    emojis: [],
+    emojisByName: new Map(),
+    emojisById: new Map(),
   };
 
   it("calculates diff and generates plan for create, update, and moves", () => {

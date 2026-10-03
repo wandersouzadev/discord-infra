@@ -2,6 +2,7 @@ import type { DiscordRestClient } from "../discord/client.js";
 import { ChannelType } from "../discord/types.js";
 import type {
   ChannelOperationPayload,
+  EmojiOperationPayload,
   Operation,
   PermissionOperationPayload,
   Plan,
@@ -32,6 +33,7 @@ export async function executePlan(
   const roleIdsByName = new Map<string, string>();
   const categoryIdsByName = new Map<string, string>();
   const channelIdsByName = new Map<string, string>();
+  const emojiIdsByName = new Map<string, string>();
 
   for (let i = 0; i < plan.operations.length; i++) {
     const op = plan.operations[i]!;
@@ -71,6 +73,80 @@ export async function executePlan(
         case "DELETE_ROLE": {
           const roleId = op.resourceId!;
           result = await client.deleteRole(plan.guildId, roleId, auditReason);
+          break;
+        }
+
+        case "CREATE_EMOJI": {
+          const payload = op.payload as EmojiOperationPayload;
+          if (!payload.image) {
+            throw new Error(`Cannot create emoji '${payload.name}': image data URI is required.`);
+          }
+
+          let roleIds: string[] | undefined;
+          if (payload.roles && payload.roles.length > 0) {
+            roleIds = [];
+            for (const rName of payload.roles) {
+              const lower = rName.toLowerCase();
+              const rId = payload.roleMap?.[lower] ?? roleIdsByName.get(lower);
+              if (rId) {
+                roleIds.push(rId);
+              } else {
+                throw new Error(
+                  `Cannot set role restriction for emoji '${payload.name}': role '${rName}' Discord ID not resolved.`,
+                );
+              }
+            }
+          }
+
+          const createdEmoji = await client.createEmoji(
+            plan.guildId,
+            {
+              name: payload.name,
+              image: payload.image,
+              roles: roleIds,
+            },
+            auditReason,
+          );
+          result = createdEmoji;
+          emojiIdsByName.set(payload.name.toLowerCase(), createdEmoji.id);
+          break;
+        }
+
+        case "UPDATE_EMOJI": {
+          const emojiId = op.resourceId!;
+          const payload = op.payload as EmojiOperationPayload;
+
+          let roleIds: string[] | undefined;
+          if (payload.roles !== undefined) {
+            roleIds = [];
+            for (const rName of payload.roles) {
+              const lower = rName.toLowerCase();
+              const rId = payload.roleMap?.[lower] ?? roleIdsByName.get(lower);
+              if (rId) {
+                roleIds.push(rId);
+              } else {
+                throw new Error(
+                  `Cannot set role restriction for emoji '${payload.name}': role '${rName}' Discord ID not resolved.`,
+                );
+              }
+            }
+          }
+
+          result = await client.updateEmoji(
+            plan.guildId,
+            emojiId,
+            {
+              name: payload.name,
+              roles: roleIds,
+            },
+            auditReason,
+          );
+          break;
+        }
+
+        case "DELETE_EMOJI": {
+          const emojiId = op.resourceId!;
+          result = await client.deleteEmoji(plan.guildId, emojiId, auditReason);
           break;
         }
 

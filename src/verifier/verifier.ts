@@ -9,7 +9,7 @@ import type { DiscordServerState } from "../discord/state.js";
 import { format, symbols } from "../utils/format.js";
 
 export interface DriftItem {
-  resourceType: "role" | "category" | "channel" | "permission";
+  resourceType: "role" | "category" | "channel" | "permission" | "emoji";
   resourceName: string;
   field: string;
   desired: unknown;
@@ -22,6 +22,7 @@ export interface VerificationResult {
   categoriesInSync: boolean;
   channelsInSync: boolean;
   permissionsInSync: boolean;
+  emojisInSync: boolean;
   drift: DriftItem[];
 }
 
@@ -39,6 +40,7 @@ export function verifyState(
   let categoriesInSync = true;
   let channelsInSync = true;
   let permissionsInSync = true;
+  let emojisInSync = true;
 
   // 1. Verify Roles
   for (const role of desired.roles ?? []) {
@@ -281,8 +283,57 @@ export function verifyState(
     }
   }
 
+  // 5. Verify Emojis
+  for (const emoji of desired.emojis ?? []) {
+    const existing =
+      (emoji.discord_id ? current.emojisById.get(emoji.discord_id) : undefined) ??
+      current.emojisByName.get(emoji.name.toLowerCase());
+
+    if (!existing) {
+      emojisInSync = false;
+      drift.push({
+        resourceType: "emoji",
+        resourceName: `:${emoji.name}:`,
+        field: "existence",
+        desired: "present",
+        actual: "missing",
+      });
+      continue;
+    }
+
+    if (emoji.roles !== undefined) {
+      const existingRoleNames = (existing.roles ?? [])
+        .map((rId) => current.rolesById.get(rId)?.name)
+        .filter((name): name is string => Boolean(name))
+        .sort();
+      const desiredRoleNames = [...emoji.roles].sort();
+
+      const rolesDiffer =
+        existingRoleNames.length !== desiredRoleNames.length ||
+        existingRoleNames.some(
+          (r, idx) => r.toLowerCase() !== desiredRoleNames[idx]?.toLowerCase(),
+        );
+
+      if (rolesDiffer) {
+        emojisInSync = false;
+        drift.push({
+          resourceType: "emoji",
+          resourceName: `:${emoji.name}:`,
+          field: "roles",
+          desired: desiredRoleNames,
+          actual: existingRoleNames,
+        });
+      }
+    }
+  }
+
   const inSync =
-    rolesInSync && categoriesInSync && channelsInSync && permissionsInSync && drift.length === 0;
+    rolesInSync &&
+    categoriesInSync &&
+    channelsInSync &&
+    permissionsInSync &&
+    emojisInSync &&
+    drift.length === 0;
 
   return {
     inSync,
@@ -290,6 +341,7 @@ export function verifyState(
     categoriesInSync,
     channelsInSync,
     permissionsInSync,
+    emojisInSync,
     drift,
   };
 }
@@ -304,6 +356,7 @@ export function formatVerificationOutput(result: VerificationResult): string {
 
   lines.push(
     `  ${result.rolesInSync ? symbols.success : symbols.failure} Roles`,
+    `  ${result.emojisInSync ? symbols.success : symbols.failure} Emojis`,
     `  ${result.categoriesInSync ? symbols.success : symbols.failure} Categories`,
     `  ${result.channelsInSync ? symbols.success : symbols.failure} Channels`,
     `  ${result.permissionsInSync ? symbols.success : symbols.failure} Permissions`,

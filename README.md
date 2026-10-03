@@ -94,6 +94,7 @@ The bot needs sufficient permissions to manage resources on your server:
 - **Minimal Recommended Permissions**:
   - `Manage Roles` (`MANAGE_ROLES`)
   - `Manage Channels` (`MANAGE_CHANNELS`)
+  - `Manage Expressions` (`MANAGE_GUILD_EXPRESSIONS` / `CREATE_GUILD_EXPRESSIONS`)
   - `View Channels` (`VIEW_CHANNEL`)
 - **Or Administrator**:
   - `Administrator` grants all permissions across the server.
@@ -144,6 +145,8 @@ LOG_LEVEL=info
 ```text
 discord/
 ├── roles.yaml        # Role definitions, colors, hoist, mentionable
+├── emojis.yaml       # Custom emojis, image file paths, role restrictions
+├── emojis/           # Custom emoji image files (PNG, JPG, GIF, WebP)
 ├── categories.yaml   # Category groupings and positions
 ├── channels.yaml     # Channels, category mapping, topic, slowmode
 └── permissions.yaml  # Category and channel permission overwrites
@@ -174,6 +177,20 @@ roles:
       - view_channel
       - send_messages
       - manage_messages
+```
+
+#### `discord/emojis.yaml`
+
+```yaml
+emojis:
+  - name: realm_sword
+    file: emojis/realm_sword.png # Path relative to discord/ or data URI
+    roles: # Optional: restrict to specific roles
+      - Paladin
+      - GM
+
+  - name: mana_potion
+    file: emojis/mana_potion.png
 ```
 
 #### `discord/categories.yaml`
@@ -348,6 +365,9 @@ bun run wipe --all
 
 # Or only wipe roles (leaving channels and categories intact):
 bun run wipe --roles-only
+
+# Or only wipe custom emojis:
+bun run wipe --emojis-only
 
 # Or wipe ALL roles across the entire server:
 bun run wipe --all --roles-only

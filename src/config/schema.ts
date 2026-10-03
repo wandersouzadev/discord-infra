@@ -1,3 +1,5 @@
+import { existsSync, statSync } from "node:fs";
+import { resolve } from "node:path";
 import { z } from "zod";
 import { isValidPermission, normalizePermissionName } from "../discord/permissions.js";
 import { ConfigValidationError } from "../utils/errors.js";
@@ -106,10 +108,27 @@ export const PermissionsMapSchema = z.record(
   ),
 );
 
+export const EmojiSchema = z.object({
+  name: z
+    .string()
+    .min(2, "Emoji name must be at least 2 characters")
+    .max(32, "Emoji name cannot exceed 32 characters")
+    .regex(
+      /^[a-zA-Z0-9_]+$/,
+      "Emoji name must contain only alphanumeric characters and underscores (no spaces or hyphens)",
+    ),
+  discord_id: z.string().optional(),
+  file: z.string().optional(),
+  image: z.string().optional(),
+  roles: z.array(z.string()).optional(),
+  animated: z.boolean().optional(),
+});
+
 export const DiscordConfigSchema = z.object({
   roles: z.array(RoleSchema).optional().default([]),
   categories: z.array(CategorySchema).optional().default([]),
   channels: z.array(ChannelSchema).optional().default([]),
+  emojis: z.array(EmojiSchema).optional().default([]),
   permissions: PermissionsMapSchema.optional().default({}),
 });
 
@@ -121,7 +140,7 @@ export const DiscordConfigSchema = z.object({
  * - Broken target references in permissions
  * - Invalid permission names in overwrites
  */
-export function validateReferentialIntegrity(config: DiscordConfig): void {
+export function validateReferentialIntegrity(config: DiscordConfig, configDir?: string): void {
   const errors: string[] = [];
 
   // Check duplicate role names
@@ -213,6 +232,53 @@ export function validateReferentialIntegrity(config: DiscordConfig): void {
               `Permission section for "${targetName}" -> "${roleName}" has unknown permission: "${permName}".`,
             );
           }
+        }
+      }
+    }
+  }
+
+  // Check emojis
+  const emojiNames = new Set<string>();
+  for (const emoji of config.emojis ?? []) {
+    const lower = emoji.name.toLowerCase();
+    if (emojiNames.has(lower)) {
+      errors.push(`Duplicate emoji name detected: "${emoji.name}". Emojis must have unique names.`);
+    }
+    emojiNames.add(lower);
+
+    // Verify role references in emoji
+    if (emoji.roles) {
+      for (const roleName of emoji.roles) {
+        if (!roleNames.has(roleName.toLowerCase())) {
+          errors.push(
+            `Emoji "${emoji.name}" references non-existent role "${roleName}". Available roles: ${Array.from(roleNames).join(", ") || "none"}.`,
+          );
+        }
+      }
+    }
+
+    // Verify image file existence and size if a file or local image path is given
+    const filePath =
+      emoji.file ??
+      (emoji.image && !emoji.image.startsWith("data:image/") ? emoji.image : undefined);
+    if (filePath && configDir) {
+      const resolved = resolve(configDir, filePath);
+      const cwdResolved = resolve(filePath);
+      if (!existsSync(resolved) && !existsSync(cwdResolved)) {
+        errors.push(
+          `Emoji "${emoji.name}" image file not found: "${filePath}" (searched in "${resolved}")`,
+        );
+      } else {
+        const actualPath = existsSync(resolved) ? resolved : cwdResolved;
+        try {
+          const stats = statSync(actualPath);
+          if (stats.size > 256 * 1024) {
+            errors.push(
+              `Emoji "${emoji.name}" file size (${(stats.size / 1024).toFixed(1)} KB) exceeds Discord 256 KB limit: "${filePath}"`,
+            );
+          }
+        } catch {
+          // Ignore stat error if unable to read
         }
       }
     }

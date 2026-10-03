@@ -13,6 +13,9 @@ import type {
   ModifyRolePayload,
   ModifyRolePositionPayload,
   DiscordApiErrorResponse,
+  CreateEmojiPayload,
+  DiscordEmoji,
+  ModifyEmojiPayload,
 } from "./types.js";
 
 export interface DiscordClientOptions {
@@ -302,6 +305,47 @@ export class DiscordRestClient {
     auditReason?: string,
   ): Promise<void> {
     return this.request<void>(`/channels/${channelId}/permissions/${overwriteId}`, {
+      method: "DELETE",
+      auditReason,
+    });
+  }
+
+  // --- Emojis ---
+  async getEmojis(guildId: string): Promise<DiscordEmoji[]> {
+    return this.request<DiscordEmoji[]>(`/guilds/${guildId}/emojis`);
+  }
+
+  async getEmoji(guildId: string, emojiId: string): Promise<DiscordEmoji> {
+    return this.request<DiscordEmoji>(`/guilds/${guildId}/emojis/${emojiId}`);
+  }
+
+  async createEmoji(
+    guildId: string,
+    payload: CreateEmojiPayload,
+    auditReason?: string,
+  ): Promise<DiscordEmoji> {
+    return this.request<DiscordEmoji>(`/guilds/${guildId}/emojis`, {
+      method: "POST",
+      body: payload,
+      auditReason,
+    });
+  }
+
+  async updateEmoji(
+    guildId: string,
+    emojiId: string,
+    payload: ModifyEmojiPayload,
+    auditReason?: string,
+  ): Promise<DiscordEmoji> {
+    return this.request<DiscordEmoji>(`/guilds/${guildId}/emojis/${emojiId}`, {
+      method: "PATCH",
+      body: payload,
+      auditReason,
+    });
+  }
+
+  async deleteEmoji(guildId: string, emojiId: string, auditReason?: string): Promise<void> {
+    return this.request<void>(`/guilds/${guildId}/emojis/${emojiId}`, {
       method: "DELETE",
       auditReason,
     });

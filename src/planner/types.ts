@@ -5,6 +5,9 @@ export type OperationType =
   | "UPDATE_ROLE"
   | "REORDER_ROLES"
   | "DELETE_ROLE"
+  | "CREATE_EMOJI"
+  | "UPDATE_EMOJI"
+  | "DELETE_EMOJI"
   | "CREATE_CATEGORY"
   | "UPDATE_CATEGORY"
   | "REORDER_CATEGORIES"
@@ -17,7 +20,7 @@ export type OperationType =
   | "SET_PERMISSIONS"
   | "DELETE_PERMISSIONS";
 
-export type ResourceType = "role" | "category" | "channel" | "permission";
+export type ResourceType = "role" | "category" | "channel" | "permission" | "emoji";
 
 export interface PropertyChange {
   property: string;
@@ -50,6 +53,7 @@ export interface UnmanagedResources {
   roles: Array<{ id: string; name: string }>;
   categories: Array<{ id: string; name: string }>;
   channels: Array<{ id: string; name: string; category?: string }>;
+  emojis: Array<{ id: string; name: string }>;
 }
 
 export interface Plan {
@@ -67,6 +71,7 @@ export interface ResolvedResourceMap {
   categoriesByName: Map<string, string>; // lower name -> discord category id
   categoriesById: Map<string, string>;
   channelsByName: Map<string, string>; // 'category:channel' -> discord channel id
+  emojisByName: Map<string, string>; // lower name -> discord emoji id
 }
 
 export interface ChannelOperationPayload {
@@ -77,6 +82,14 @@ export interface ChannelOperationPayload {
   parentCategoryName?: string;
   position?: number;
   slowmode?: number;
+}
+
+export interface EmojiOperationPayload {
+  name: string;
+  image?: string;
+  roles?: string[];
+  roleMap?: Record<string, string>;
+  file?: string;
 }
 
 export interface PermissionOperationPayload {

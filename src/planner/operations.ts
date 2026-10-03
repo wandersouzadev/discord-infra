@@ -3,6 +3,8 @@ import type { Operation, OperationType, PlanSummary } from "./types.js";
 const OPERATION_PRIORITY: Record<OperationType, number> = {
   CREATE_ROLE: 10,
   UPDATE_ROLE: 20,
+  CREATE_EMOJI: 25,
+  UPDATE_EMOJI: 26,
   CREATE_CATEGORY: 30,
   UPDATE_CATEGORY: 40,
   CREATE_CHANNEL: 50,
@@ -13,6 +15,7 @@ const OPERATION_PRIORITY: Record<OperationType, number> = {
   REORDER_CATEGORIES: 80,
   REORDER_CHANNELS: 85,
   REORDER_ROLES: 90,
+  DELETE_EMOJI: 95,
   DELETE_CHANNEL: 100,
   DELETE_CATEGORY: 110,
   DELETE_ROLE: 120,
@@ -85,12 +88,14 @@ export function calculatePlanSummary(operations: Operation[]): PlanSummary {
 
     if (
       op.type === "CREATE_ROLE" ||
+      op.type === "CREATE_EMOJI" ||
       op.type === "CREATE_CATEGORY" ||
       op.type === "CREATE_CHANNEL"
     ) {
       create++;
     } else if (
       op.type === "DELETE_ROLE" ||
+      op.type === "DELETE_EMOJI" ||
       op.type === "DELETE_CATEGORY" ||
       op.type === "DELETE_CHANNEL" ||
       op.type === "DELETE_PERMISSIONS"

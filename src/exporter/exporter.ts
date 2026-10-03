@@ -6,6 +6,7 @@ import type {
   CategoryConfig,
   ChannelConfig,
   DiscordConfig,
+  EmojiConfig,
   PermissionsConfig,
   RoleConfig,
 } from "../config/types.js";
@@ -141,10 +142,27 @@ export function exportStateToConfig(
     }
   }
 
+  // 5. Emojis
+  const emojis: EmojiConfig[] = [];
+  for (const emoji of state.emojis ?? []) {
+    if (emoji.managed || !emoji.name) continue;
+    const emojiConfig: EmojiConfig = {
+      name: emoji.name,
+      ...(options.includeIds ? { discord_id: emoji.id } : {}),
+    };
+    if (emoji.roles && emoji.roles.length > 0) {
+      emojiConfig.roles = emoji.roles
+        .map((rId) => state.rolesById.get(rId)?.name)
+        .filter((name): name is string => Boolean(name));
+    }
+    emojis.push(emojiConfig);
+  }
+
   return {
     roles,
     categories,
     channels,
+    emojis,
     permissions,
   };
 }
@@ -189,6 +207,12 @@ export function writeExportFiles(
     const chanFile = join(targetDir, "channels.yaml");
     writeFileSync(chanFile, stringifyYaml({ channels: config.channels }, { indent: 2 }), "utf-8");
     filesWritten.push(chanFile);
+  }
+
+  if (config.emojis && config.emojis.length > 0) {
+    const emojisFile = join(targetDir, "emojis.yaml");
+    writeFileSync(emojisFile, stringifyYaml({ emojis: config.emojis }, { indent: 2 }), "utf-8");
+    filesWritten.push(emojisFile);
   }
 
   if (config.permissions && Object.keys(config.permissions).length > 0) {

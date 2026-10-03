@@ -71,6 +71,9 @@ describe("Verifier Engine", () => {
     categoriesById: new Map([[communityCat.id, communityCat]]),
     channelsByName: new Map([["general", [generalChan]]]),
     channelsById: new Map([[generalChan.id, generalChan]]),
+    emojis: [],
+    emojisByName: new Map(),
+    emojisById: new Map(),
   };
 
   it("verifies state matches when desired matches current", () => {
